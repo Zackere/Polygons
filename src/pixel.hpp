@@ -13,7 +13,7 @@ class Pixel {
   virtual ~Pixel() = default;
 
   void SetColor(COLORREF color) {
-    is_up_to_date_ = color_ != color;
+    is_up_to_date_ = color_ == color;
     color_ = color;
   }
   COLORREF GetColor() const { return color_; }

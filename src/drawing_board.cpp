@@ -25,6 +25,17 @@ std::string GetErrorCodeString(int const error_code) {
   LocalFree(message_buffer);
   return message;
 }
+
+class ScopedHDC {
+ public:
+  explicit ScopedHDC(HWND hWnd) : hWnd_(hWnd), hdc_(GetDC(hWnd)) {}
+  ~ScopedHDC() { ReleaseDC(hWnd_, hdc_); }
+  HDC Get() const { return hdc_; }
+
+ private:
+  HWND hWnd_;
+  HDC hdc_;
+};
 }  // namespace
 
 /* static */
@@ -76,9 +87,11 @@ DrawingBoard::DrawingBoard(SizeType posx,
   }
   SetWindowLongPtr(window_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
-  hdc_mem_ = CreateCompatibleDC(GetDC(window_));
-  off_screen_bitmap_ = CreateCompatibleBitmap(GetDC(window_), width, height);
+  ScopedHDC scoped_hdc(window_);
+  hdc_mem_ = CreateCompatibleDC(scoped_hdc.Get());
+  off_screen_bitmap_ = CreateCompatibleBitmap(scoped_hdc.Get(), width, height);
   SelectObject(hdc_mem_, off_screen_bitmap_);
+  ReleaseDC(window_, scoped_hdc.Get());
 
   drawing_board_.resize(width);
   for (auto i = 0u; i < width; ++i) {
@@ -93,6 +106,7 @@ DrawingBoard::DrawingBoard(SizeType posx,
 }
 
 DrawingBoard::~DrawingBoard() {
+  ReleaseDC(window_, hdc_mem_);
   DeleteObject(off_screen_bitmap_);
   DeleteDC(hdc_mem_);
   DestroyWindow(window_);
@@ -102,7 +116,8 @@ void DrawingBoard::Display() {
   UpdateBitmap();
   RECT rect = {};
   GetClientRect(window_, &rect);
-  StretchBlt(GetDC(window_), rect.left, rect.top, rect.right - rect.left,
+  ScopedHDC scoped_hdc(window_);
+  StretchBlt(scoped_hdc.Get(), rect.left, rect.top, rect.right - rect.left,
              rect.bottom - rect.top, hdc_mem_, 0, 0, drawing_board_width_,
              drawing_board_height_, SRCCOPY);
 }
@@ -123,6 +138,15 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     case WM_PAINT: {
       if (window)
         window->Display();
+      return 0;
+    }
+    case WM_LBUTTONUP: {
+      if (window) {
+        window->SetPixel(LOWORD(lParam) / window->GetPixelSize(),
+                         HIWORD(lParam) / window->GetPixelSize(),
+                         RGB(255, 0, 0));
+        window->Display();
+      }
       return 0;
     }
     case WM_ERASEBKGND:

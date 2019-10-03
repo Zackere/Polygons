@@ -26,6 +26,7 @@ class DrawingBoard {
   bool Hide() { return ShowWindow(window_, SW_MINIMIZE); }
   void Display();
 
+  SizeType GetPixelSize() const { return pixel_size_; }
   void SetPixel(SizeType x, SizeType y, COLORREF color);
 
  private:
