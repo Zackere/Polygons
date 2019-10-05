@@ -4,6 +4,7 @@
 
 #include <Windows.h>
 
+#include <string_view>
 #include <vector>
 
 namespace gk {
@@ -28,7 +29,13 @@ class DrawingBoard {
   SizeType GetWidth() const { return drawing_board_width_; }
   SizeType GetHeight() const { return drawing_board_height_; }
 
+  void Clear();
   void SetPixel(SizeType x, SizeType y, COLORREF color);
+  void DrawTxt(SizeType posx,
+               SizeType posy,
+               std::wstring_view text,
+               SizeType font_size,
+               COLORREF color);
 
  private:
   static LRESULT CALLBACK WndProc(HWND hWnd,

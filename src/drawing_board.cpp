@@ -2,9 +2,7 @@
 
 #include "drawing_board.hpp"
 
-#include <functional>
 #include <string>
-#include <unordered_map>
 
 namespace gk {
 namespace {
@@ -82,6 +80,7 @@ DrawingBoard::DrawingBoard(SizeType posx,
   hdc_mem_ = CreateCompatibleDC(window_hdc_);
   off_screen_bitmap_ = CreateCompatibleBitmap(window_hdc_, width, height);
   SelectObject(hdc_mem_, off_screen_bitmap_);
+  SetBkMode(hdc_mem_, TRANSPARENT);
 }
 
 DrawingBoard::~DrawingBoard() {
@@ -99,8 +98,32 @@ void DrawingBoard::Display() {
              drawing_board_height_, SRCCOPY);
 }
 
+void DrawingBoard::Clear() {
+  RECT rect = {0, 0, drawing_board_width_, drawing_board_height_};
+  FillRect(hdc_mem_, &rect,
+           reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
+}
+
 void DrawingBoard::SetPixel(SizeType x, SizeType y, COLORREF color) {
   ::SetPixel(hdc_mem_, x, y, color);
+}
+
+void DrawingBoard::DrawTxt(SizeType posx,
+                           SizeType posy,
+                           std::wstring_view text,
+                           SizeType font_size,
+                           COLORREF color) {
+  RECT rect{posx, posy, drawing_board_width_, drawing_board_height_};
+  HFONT hFont;
+  hFont = CreateFont(font_size, 0, 0, 0, FW_THIN, FALSE, FALSE, FALSE,
+                     DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS,
+                     ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("arial"));
+  HFONT old_font = reinterpret_cast<HFONT>(SelectObject(hdc_mem_, hFont));
+  COLORREF old_color = SetTextColor(hdc_mem_, color);
+  DrawTextW(hdc_mem_, text.data(), text.length(), &rect, DT_NOCLIP);
+  SetTextColor(hdc_mem_, old_color);
+  SelectObject(hdc_mem_, old_font);
+  DeleteObject(hFont);
 }
 
 /* static */
