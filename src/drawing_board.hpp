@@ -7,8 +7,6 @@
 #include <vector>
 
 namespace gk {
-class Pixel;
-
 class DrawingBoard {
  public:
   using SizeType = unsigned int;
@@ -27,6 +25,9 @@ class DrawingBoard {
   void Display();
 
   SizeType GetPixelSize() const { return pixel_size_; }
+  SizeType GetWidth() const { return drawing_board_width_; }
+  SizeType GetHeight() const { return drawing_board_height_; }
+
   void SetPixel(SizeType x, SizeType y, COLORREF color);
 
  private:
@@ -34,10 +35,9 @@ class DrawingBoard {
                                   UINT message,
                                   WPARAM wParam,
                                   LPARAM lParam);
-  void UpdateBitmap();
 
   HWND window_;
-  std::vector<std::vector<Pixel>> drawing_board_;
+  HDC window_hdc_;
 
   const SizeType pixel_size_;
   const SizeType drawing_board_width_;

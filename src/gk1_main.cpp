@@ -6,7 +6,7 @@
 
 namespace {
 void RunMessageLoop() {
-  MSG message;
+  MSG message = {};
   while (GetMessage(&message, NULL, 0, 0)) {
     TranslateMessage(&message);
     DispatchMessage(&message);
@@ -21,8 +21,8 @@ int WINAPI wWinMain(HINSTANCE hInstance,
   // Please, change these.
   constexpr gk::DrawingBoard::SizeType kPosx = 0, kPosy = 0;
   constexpr gk::DrawingBoard::SizeType kPixelSize = 10;
-  constexpr gk::DrawingBoard::SizeType kWidth = 160;
-  constexpr gk::DrawingBoard::SizeType kHeight = 100;
+  constexpr gk::DrawingBoard::SizeType kWidth = 400;
+  constexpr gk::DrawingBoard::SizeType kHeight = 400;
 
   // Do not change these.
   gk::DrawingBoard::RegisterWindowClass(hInstance);

@@ -6,8 +6,6 @@
 #include <string>
 #include <unordered_map>
 
-#include "pixel.hpp"
-
 namespace gk {
 namespace {
 constexpr wchar_t kDrawingBoardClassName[] = L"gk::DrawingBoard";
@@ -25,17 +23,6 @@ std::string GetErrorCodeString(int const error_code) {
   LocalFree(message_buffer);
   return message;
 }
-
-class ScopedHDC {
- public:
-  explicit ScopedHDC(HWND hWnd) : hWnd_(hWnd), hdc_(GetDC(hWnd)) {}
-  ~ScopedHDC() { ReleaseDC(hWnd_, hdc_); }
-  HDC Get() const { return hdc_; }
-
- private:
-  HWND hWnd_;
-  HDC hdc_;
-};
 }  // namespace
 
 /* static */
@@ -56,9 +43,13 @@ DrawingBoard::DrawingBoard(SizeType posx,
                            SizeType height,
                            SizeType pixel_size,
                            HINSTANCE hInstance)
-    : pixel_size_(pixel_size),
+    : window_(NULL),
+      window_hdc_(NULL),
+      pixel_size_(pixel_size),
       drawing_board_width_(width),
-      drawing_board_height_(height) {
+      drawing_board_height_(height),
+      hdc_mem_(NULL),
+      off_screen_bitmap_(NULL) {
   if (!(width > 0 && height > 0 && pixel_size > 0)) {
     MessageBox(NULL,
                "One of parameters is incorrect. (gk::DrawingBoard constructor)",
@@ -86,45 +77,30 @@ DrawingBoard::DrawingBoard(SizeType posx,
     return;
   }
   SetWindowLongPtr(window_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+  window_hdc_ = GetDC(window_);
 
-  ScopedHDC scoped_hdc(window_);
-  hdc_mem_ = CreateCompatibleDC(scoped_hdc.Get());
-  off_screen_bitmap_ = CreateCompatibleBitmap(scoped_hdc.Get(), width, height);
+  hdc_mem_ = CreateCompatibleDC(window_hdc_);
+  off_screen_bitmap_ = CreateCompatibleBitmap(window_hdc_, width, height);
   SelectObject(hdc_mem_, off_screen_bitmap_);
-  ReleaseDC(window_, scoped_hdc.Get());
-
-  drawing_board_.resize(width);
-  for (auto i = 0u; i < width; ++i) {
-    drawing_board_[i].reserve(height);
-    for (auto j = 0u; j < height; ++j) {
-      drawing_board_[i].emplace_back(
-          std::complex<unsigned int>{i, j},
-          (i + j) % 2 ? RGB(255, 255, 255) : RGB(0, 0, 0));
-    }
-  }
-  UpdateBitmap();
 }
 
 DrawingBoard::~DrawingBoard() {
-  ReleaseDC(window_, hdc_mem_);
+  ReleaseDC(window_, window_hdc_);
   DeleteObject(off_screen_bitmap_);
   DeleteDC(hdc_mem_);
   DestroyWindow(window_);
 }
 
 void DrawingBoard::Display() {
-  UpdateBitmap();
   RECT rect = {};
   GetClientRect(window_, &rect);
-  ScopedHDC scoped_hdc(window_);
-  StretchBlt(scoped_hdc.Get(), rect.left, rect.top, rect.right - rect.left,
+  StretchBlt(window_hdc_, rect.left, rect.top, rect.right - rect.left,
              rect.bottom - rect.top, hdc_mem_, 0, 0, drawing_board_width_,
              drawing_board_height_, SRCCOPY);
 }
 
 void DrawingBoard::SetPixel(SizeType x, SizeType y, COLORREF color) {
-  if (x < drawing_board_width_ && y < drawing_board_height_)
-    drawing_board_[x][y].SetColor(color);
+  ::SetPixel(hdc_mem_, x, y, color);
 }
 
 /* static */
@@ -136,8 +112,9 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
       reinterpret_cast<DrawingBoard*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
   switch (message) {
     case WM_PAINT: {
-      if (window)
+      if (window) {
         window->Display();
+      }
       return 0;
     }
     case WM_LBUTTONUP: {
@@ -156,19 +133,6 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
       return 0;
     default:
       return DefWindowProcW(hWnd, message, wParam, lParam);
-  }
-}
-
-void DrawingBoard::UpdateBitmap() {
-  for (auto i = 0u; i < drawing_board_.size(); ++i) {
-    for (auto j = 0u; j < drawing_board_[i].size(); ++j) {
-      auto& pixel = drawing_board_[i][j];
-      if (!pixel.IsUptoDate()) {
-        ::SetPixel(hdc_mem_, pixel.GetPos().real(), pixel.GetPos().imag(),
-                   pixel.GetColor());
-        pixel.OnDraw();
-      }
-    }
   }
 }
 }  // namespace gk

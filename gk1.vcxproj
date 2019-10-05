@@ -21,11 +21,9 @@
   <ItemGroup>
     <ClCompile Include="src\drawing_board.cpp" />
     <ClCompile Include="src\gk1_main.cpp" />
-    <ClCompile Include="src\pixel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\drawing_board.hpp" />
-    <ClInclude Include="src\pixel.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

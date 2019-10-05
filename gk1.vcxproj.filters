@@ -21,15 +21,9 @@
     <ClCompile Include="src\gk1_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\pixel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\drawing_board.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\pixel.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
