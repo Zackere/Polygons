@@ -10,6 +10,14 @@
 namespace gk {
 class DrawingBoard {
  public:
+  class DrawableObject {
+   public:
+    virtual void Draw(DrawingBoard* board) = 0;
+    virtual void Erase(DrawingBoard* board) = 0;
+    virtual void OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) = 0;
+    virtual void OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) = 0;
+    virtual void OnMouseMove(DrawingBoard* board, POINT mouse_pos) = 0;
+  };
   using SizeType = unsigned int;
 
   static bool RegisterWindowClass(HINSTANCE hInstance);
