@@ -110,11 +110,12 @@ bool Line::OnMouseMove(DrawingBoard* board,
     *clicked_vertex_ = Vertex{mouse_pos.first, mouse_pos.second};
     line_points_ = Bresenham(begin_, end_);
   } else if (line_clicked_) {
-    begin_ =
-        Vertex{begin_.first + mouse_pos.first - last_mouse_pos_.value().first,
-               begin_.second + mouse_pos.second - last_mouse_pos_.value().second};
-    end_ = Vertex{end_.first + mouse_pos.first - last_mouse_pos_.value().first,
-                  end_.second + mouse_pos.second - last_mouse_pos_.value().second};
+    begin_ = Vertex{
+        begin_.first + mouse_pos.first - last_mouse_pos_.value().first,
+        begin_.second + mouse_pos.second - last_mouse_pos_.value().second};
+    end_ =
+        Vertex{end_.first + mouse_pos.first - last_mouse_pos_.value().first,
+               end_.second + mouse_pos.second - last_mouse_pos_.value().second};
     last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
     line_points_ = Bresenham(begin_, end_);
   }

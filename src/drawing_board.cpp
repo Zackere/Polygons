@@ -163,7 +163,7 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     case WM_LBUTTONDBLCLK:
       if (window) {
         std::pair<int, int> pos =
-            std::make_pair<short, short>(LOWORD(lParam), HIWORD(lParam));
+            std::pair<int16_t, int16_t>(LOWORD(lParam), HIWORD(lParam));
         pos.first /= window->GetPixelSize();
         pos.second /= window->GetPixelSize();
         window->OnMouseLButtonDoubleClick(pos);
@@ -172,7 +172,8 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
       return 0;
     case WM_LBUTTONDOWN:
       if (window) {
-        std::pair<int, int> pos = std::make_pair<short, short>(LOWORD(lParam), HIWORD(lParam));
+        std::pair<int, int> pos =
+            std::pair<int16_t, int16_t>(LOWORD(lParam), HIWORD(lParam));
         pos.first /= window->GetPixelSize();
         pos.second /= window->GetPixelSize();
         window->OnMouseLButtonDown(pos);
@@ -181,7 +182,7 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     case WM_LBUTTONUP:
       if (window) {
         std::pair<int, int> pos =
-            std::make_pair<short, short>(LOWORD(lParam), HIWORD(lParam));
+            std::pair<int16_t, int16_t>(LOWORD(lParam), HIWORD(lParam));
         pos.first /= window->GetPixelSize();
         pos.second /= window->GetPixelSize();
         window->OnMouseLButtonUp(pos);
@@ -190,7 +191,7 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     case WM_MOUSEMOVE:
       if (window) {
         std::pair<int, int> pos =
-            std::make_pair<short, short>(LOWORD(lParam), HIWORD(lParam));
+            std::pair<int16_t, int16_t>(LOWORD(lParam), HIWORD(lParam));
         pos.first /= window->GetPixelSize();
         pos.second /= window->GetPixelSize();
         window->OnMouseMove(pos);

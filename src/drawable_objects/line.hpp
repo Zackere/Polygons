@@ -5,8 +5,8 @@
 #include <Windows.h>
 
 #include <list>
-#include <utility>
 #include <optional>
+#include <utility>
 
 #include "../drawing_board.hpp"
 
@@ -24,7 +24,8 @@ class Line : public DrawingBoard::DrawableObject {
 
   // Overridden from DrawingBoard::DrawableObject
   void Display(DrawingBoard* board) override;
-  bool OnMouseLButtonDown(DrawingBoard* board, DrawingBoard::CoordinatePair mouse_pos) override;
+  bool OnMouseLButtonDown(DrawingBoard* board,
+                          DrawingBoard::CoordinatePair mouse_pos) override;
   bool OnMouseLButtonUp(DrawingBoard* board,
                         DrawingBoard::CoordinatePair mouse_pos) override;
   bool OnMouseMove(DrawingBoard* board,
