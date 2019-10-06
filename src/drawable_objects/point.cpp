@@ -2,21 +2,18 @@
 
 #include "point.hpp"
 
-#include <utility>
-
 namespace gk {
-Point::Point(std::complex<DrawingBoard::Coordinate> const& position,
-             COLORREF color)
+Point::Point(CoordinatePair const& position, COLORREF color)
     : position_(position), color_(color), clicked_(false) {}
 
 Point::~Point() = default;
 
 void Point::Display(DrawingBoard* board) {
-  board->SetPixel(position_.real(), position_.imag(), color_);
+  board->SetPixel(position_.first, position_.second, color_);
 }
 
 bool Point::OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) {
-  clicked_ = mouse_pos.x == position_.real() && mouse_pos.y == position_.imag();
+  clicked_ = mouse_pos.x == position_.first && mouse_pos.y == position_.second;
   return false;
 }
 
@@ -27,9 +24,7 @@ bool Point::OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) {
 
 bool Point::OnMouseMove(DrawingBoard* board, POINT mouse_pos) {
   if (clicked_) {
-    std::complex<DrawingBoard::Coordinate> new_pos{
-        static_cast<DrawingBoard::Coordinate>(mouse_pos.x),
-        static_cast<DrawingBoard::Coordinate>(mouse_pos.y)};
+    CoordinatePair new_pos = std::make_pair(mouse_pos.x, mouse_pos.y);
     if (new_pos != position_) {
       position_ = std::move(new_pos);
       return true;

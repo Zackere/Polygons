@@ -4,14 +4,16 @@
 
 #include <Windows.h>
 
-#include <complex>
+#include <utility>
 
 #include "../drawing_board.hpp"
 
 namespace gk {
 class Point : public DrawingBoard::DrawableObject {
  public:
-  Point(std::complex<DrawingBoard::Coordinate> const& position, COLORREF color);
+  using CoordinatePair =
+      std::pair<DrawingBoard::Coordinate, DrawingBoard::Coordinate>;
+  Point(CoordinatePair const& position, COLORREF color);
   ~Point() override;
 
   // Overridden from DrawingBoard::DrawableObject
@@ -21,7 +23,7 @@ class Point : public DrawingBoard::DrawableObject {
   bool OnMouseMove(DrawingBoard* board, POINT mouse_pos) override;
 
  private:
-  std::complex<DrawingBoard::Coordinate> position_;
+  CoordinatePair position_;
   COLORREF color_;
 
   bool clicked_ = false;
