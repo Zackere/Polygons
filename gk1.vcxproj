@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\drawable_objects\point.cpp" />
     <ClCompile Include="src\drawing_board.cpp" />
     <ClCompile Include="src\gk1_main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\drawable_objects\point.hpp" />
     <ClInclude Include="src\drawing_board.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

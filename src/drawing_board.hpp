@@ -4,7 +4,9 @@
 
 #include <Windows.h>
 
+#include <memory>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 
 namespace gk {
@@ -12,11 +14,10 @@ class DrawingBoard {
  public:
   class DrawableObject {
    public:
-    virtual void Draw(DrawingBoard* board) = 0;
-    virtual void Erase(DrawingBoard* board) = 0;
-    virtual void OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) = 0;
-    virtual void OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) = 0;
-    virtual void OnMouseMove(DrawingBoard* board, POINT mouse_pos) = 0;
+    virtual void Display(DrawingBoard* board) = 0;
+    virtual bool OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) = 0;
+    virtual bool OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) = 0;
+    virtual bool OnMouseMove(DrawingBoard* board, POINT mouse_pos) = 0;
   };
   using SizeType = unsigned int;
 
@@ -45,11 +46,16 @@ class DrawingBoard {
                SizeType font_size,
                COLORREF color);
 
+  void AddObject(std::unique_ptr<DrawableObject> object);
+
  private:
   static LRESULT CALLBACK WndProc(HWND hWnd,
                                   UINT message,
                                   WPARAM wParam,
                                   LPARAM lParam);
+  bool OnMouseLButtonDown(POINT mouse_pos);
+  bool OnMouseLButtonUp(POINT mouse_pos);
+  bool OnMouseMove(POINT mouse_pos);
 
   HWND window_;
   HDC window_hdc_;
@@ -60,6 +66,8 @@ class DrawingBoard {
 
   HDC hdc_mem_;
   HBITMAP off_screen_bitmap_;
+
+  std::unordered_set<std::unique_ptr<DrawableObject>> objects_;
 
   // Disallow copy and assign
   DrawingBoard& operator=(DrawingBoard&) = delete;

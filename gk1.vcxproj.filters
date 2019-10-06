@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Drawable Objects">
+      <UniqueIdentifier>{371af0d4-fb30-49bd-9b4b-5cd41c7ba0ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\drawing_board.cpp">
@@ -21,10 +24,16 @@
     <ClCompile Include="src\gk1_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\drawable_objects\point.cpp">
+      <Filter>Drawable Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\drawing_board.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\drawable_objects\point.hpp">
+      <Filter>Drawable Objects</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

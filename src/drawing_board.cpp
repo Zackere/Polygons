@@ -4,6 +4,8 @@
 
 #include <string>
 
+#include "drawable_objects/point.hpp"
+
 namespace gk {
 namespace {
 constexpr wchar_t kDrawingBoardClassName[] = L"gk::DrawingBoard";
@@ -31,6 +33,7 @@ bool DrawingBoard::RegisterWindowClass(HINSTANCE hInstance) {
   window_class.hInstance = hInstance;
   window_class.lpfnWndProc = DrawingBoard::WndProc;
   window_class.hCursor = LoadCursor(NULL, (LPTSTR)IDC_CROSS);
+  window_class.style = CS_DBLCLKS;
 
   return RegisterClassW(&window_class);
 }
@@ -93,6 +96,8 @@ DrawingBoard::~DrawingBoard() {
 void DrawingBoard::Display() {
   RECT rect = {};
   GetClientRect(window_, &rect);
+  for (auto& object : objects_)
+    object->Display(this);
   StretchBlt(window_hdc_, rect.left, rect.top, rect.right - rect.left,
              rect.bottom - rect.top, hdc_mem_, 0, 0, drawing_board_width_,
              drawing_board_height_, SRCCOPY);
@@ -126,6 +131,10 @@ void DrawingBoard::DrawTxt(SizeType posx,
   DeleteObject(hFont);
 }
 
+void DrawingBoard::AddObject(std::unique_ptr<DrawableObject> object) {
+  objects_.insert(std::move(object));
+}
+
 /* static */
 LRESULT DrawingBoard::WndProc(HWND hWnd,
                               UINT message,
@@ -135,16 +144,46 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
       reinterpret_cast<DrawingBoard*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
   switch (message) {
     case WM_PAINT: {
+      if (window)
+        window->Display();
+      return 0;
+    }
+    case WM_LBUTTONDBLCLK: {
       if (window) {
+        window->AddObject(std::make_unique<Point>(
+            std::complex<SizeType>{LOWORD(lParam) / window->GetPixelSize(),
+                                   HIWORD(lParam) / window->GetPixelSize()},
+            RGB(255, 0, 0)));
+        window->Display();
+      }
+      return 0;
+    }
+    case WM_LBUTTONDOWN: {
+      if (window) {
+        if (window->OnMouseLButtonDown(POINT{
+                static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
+                static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())}))
+          window->Clear();
         window->Display();
       }
       return 0;
     }
     case WM_LBUTTONUP: {
       if (window) {
-        window->SetPixel(LOWORD(lParam) / window->GetPixelSize(),
-                         HIWORD(lParam) / window->GetPixelSize(),
-                         RGB(255, 0, 0));
+        if (window->OnMouseLButtonUp(POINT{
+                static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
+                static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())}))
+          window->Clear();
+        window->Display();
+      }
+      return 0;
+    }
+    case WM_MOUSEMOVE: {
+      if (window) {
+        if (window->OnMouseMove(POINT{
+                static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
+                static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())}))
+          window->Clear();
         window->Display();
       }
       return 0;
@@ -157,5 +196,26 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     default:
       return DefWindowProcW(hWnd, message, wParam, lParam);
   }
+}
+
+bool DrawingBoard::OnMouseLButtonDown(POINT mouse_pos) {
+  bool ret = false;
+  for (auto& object : objects_)
+    ret = ret || object->OnMouseLButtonDown(this, mouse_pos);
+  return ret;
+}
+
+bool DrawingBoard::OnMouseLButtonUp(POINT mouse_pos) {
+  bool ret = false;
+  for (auto& object : objects_)
+    ret = ret || object->OnMouseLButtonUp(this, mouse_pos);
+  return ret;
+}
+
+bool DrawingBoard::OnMouseMove(POINT mouse_pos) {
+  bool ret = false;
+  for (auto& object : objects_)
+    ret = ret || object->OnMouseMove(this, mouse_pos);
+  return ret;
 }
 }  // namespace gk
