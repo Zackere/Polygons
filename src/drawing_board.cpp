@@ -3,9 +3,9 @@
 #include "drawing_board.hpp"
 
 #include <string>
+#include <utility>
 
 #include "controllers/controller.hpp"
-#include "drawable_objects/point.hpp"
 
 namespace gk {
 namespace {
@@ -99,8 +99,7 @@ DrawingBoard::~DrawingBoard() {
 void DrawingBoard::Display() {
   RECT rect = {};
   GetClientRect(window_, &rect);
-  for (auto& object : objects_)
-    object->Display(this);
+  controller_->Draw(this);
   StretchBlt(window_hdc_, rect.left, rect.top, rect.right - rect.left,
              rect.bottom - rect.top, hdc_mem_, 0, 0, drawing_board_width_,
              drawing_board_height_, SRCCOPY);
@@ -132,10 +131,6 @@ void DrawingBoard::DrawTxt(SizeType posx,
   SetTextColor(hdc_mem_, old_color);
   SelectObject(hdc_mem_, old_font);
   DeleteObject(hFont);
-}
-
-void DrawingBoard::AddObject(std::unique_ptr<DrawableObject> object) {
-  objects_.insert(std::move(object));
 }
 
 /* static */

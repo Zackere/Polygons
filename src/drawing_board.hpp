@@ -6,8 +6,6 @@
 
 #include <memory>
 #include <string_view>
-#include <unordered_set>
-#include <vector>
 
 #include "controllers/controller.hpp"
 
@@ -49,8 +47,6 @@ class DrawingBoard {
                SizeType font_size,
                COLORREF color);
 
-  void AddObject(std::unique_ptr<DrawableObject> object);
-
  private:
   static LRESULT CALLBACK WndProc(HWND hWnd,
                                   UINT message,
@@ -74,8 +70,6 @@ class DrawingBoard {
   HBITMAP off_screen_bitmap_;
 
   std::unique_ptr<Controller> controller_;
-
-  std::unordered_set<std::unique_ptr<DrawableObject>> objects_;
 
   // Disallow copy and assign
   DrawingBoard& operator=(DrawingBoard&) = delete;

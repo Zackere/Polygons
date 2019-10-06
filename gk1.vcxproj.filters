@@ -30,6 +30,9 @@
     <ClCompile Include="src\drawable_objects\point.cpp">
       <Filter>Drawable Objects</Filter>
     </ClCompile>
+    <ClCompile Include="src\controllers\polygon_controller.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\drawing_board.hpp">
@@ -39,6 +42,9 @@
       <Filter>Drawable Objects</Filter>
     </ClInclude>
     <ClInclude Include="src\controllers\controller.hpp">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\controllers\polygon_controller.hpp">
       <Filter>Controllers</Filter>
     </ClInclude>
   </ItemGroup>

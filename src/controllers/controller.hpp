@@ -18,5 +18,6 @@ class Controller {
                          WPARAM key_code,
                          bool was_down) = 0;
   virtual bool OnKeyUp(DrawingBoard* board, WPARAM key_code) = 0;
+  virtual void Draw(DrawingBoard* board) = 0;
 };
 }  // namespace gk

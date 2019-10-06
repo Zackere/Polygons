@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 
+#include "controllers/polygon_controller.hpp"
 #include "drawing_board.hpp"
 
 namespace {
@@ -27,7 +28,8 @@ int WINAPI wWinMain(HINSTANCE hInstance,
   // Do not change these.
   gk::DrawingBoard::RegisterWindowClass(hInstance);
   gk::DrawingBoard window(kPosx, kPosy, kWidth / kPixelSize,
-                          kHeight / kPixelSize, kPixelSize, hInstance, nullptr);
+                          kHeight / kPixelSize, kPixelSize, hInstance,
+                          std::make_unique<gk::PolygonController>());
   window.Show();
   RunMessageLoop();
   return 0;
