@@ -14,6 +14,7 @@ class DrawingBoard {
  public:
   class DrawableObject {
    public:
+    virtual ~DrawableObject() = default;
     virtual void Display(DrawingBoard* board) = 0;
     virtual bool OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) = 0;
     virtual bool OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) = 0;

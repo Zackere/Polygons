@@ -9,6 +9,8 @@ Point::Point(std::complex<DrawingBoard::Coordinate> const& position,
              COLORREF color)
     : position_(position), color_(color), clicked_(false) {}
 
+Point::~Point() = default;
+
 void Point::Display(DrawingBoard* board) {
   board->SetPixel(position_.real(), position_.imag(), color_);
 }

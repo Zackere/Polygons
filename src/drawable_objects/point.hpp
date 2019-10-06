@@ -12,6 +12,7 @@ namespace gk {
 class Point : public DrawingBoard::DrawableObject {
  public:
   Point(std::complex<DrawingBoard::Coordinate> const& position, COLORREF color);
+  ~Point() override;
 
   // Overridden from DrawingBoard::DrawableObject
   void Display(DrawingBoard* board) override;
