@@ -161,31 +161,40 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
         window->OnKeyUp(wParam);
       return 0;
     case WM_LBUTTONDBLCLK:
-      if (window)
-        window->OnMouseLButtonDoubleClick(
-            std::make_pair(LOWORD(lParam) / window->GetPixelSize(),
-                           HIWORD(lParam) / window->GetPixelSize()));
+      if (window) {
+        std::pair<int, int> pos =
+            std::make_pair<short, short>(LOWORD(lParam), HIWORD(lParam));
+        pos.first /= window->GetPixelSize();
+        pos.second /= window->GetPixelSize();
+        window->OnMouseLButtonDoubleClick(pos);
+      }
 
       return 0;
     case WM_LBUTTONDOWN:
-      if (window)
-        window->OnMouseLButtonDown(
-            std::make_pair(LOWORD(lParam) / window->GetPixelSize(),
-                           HIWORD(lParam) / window->GetPixelSize()));
+      if (window) {
+        std::pair<int, int> pos = std::make_pair<short, short>(LOWORD(lParam), HIWORD(lParam));
+        pos.first /= window->GetPixelSize();
+        pos.second /= window->GetPixelSize();
+        window->OnMouseLButtonDown(pos);
+      }
       return 0;
     case WM_LBUTTONUP:
-      if (window)
-        window->OnMouseLButtonUp(
-            std::make_pair(LOWORD(lParam) / window->GetPixelSize(),
-                           HIWORD(lParam) / window->GetPixelSize()));
-
+      if (window) {
+        std::pair<int, int> pos =
+            std::make_pair<short, short>(LOWORD(lParam), HIWORD(lParam));
+        pos.first /= window->GetPixelSize();
+        pos.second /= window->GetPixelSize();
+        window->OnMouseLButtonUp(pos);
+      }
       return 0;
     case WM_MOUSEMOVE:
-      if (window)
-        window->OnMouseMove(
-            std::make_pair(LOWORD(lParam) / window->GetPixelSize(),
-                           HIWORD(lParam) / window->GetPixelSize()));
-
+      if (window) {
+        std::pair<int, int> pos =
+            std::make_pair<short, short>(LOWORD(lParam), HIWORD(lParam));
+        pos.first /= window->GetPixelSize();
+        pos.second /= window->GetPixelSize();
+        window->OnMouseMove(pos);
+      }
       return 0;
 
     case WM_ERASEBKGND:

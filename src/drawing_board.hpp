@@ -12,7 +12,7 @@ class Controller;
 
 class DrawingBoard {
  public:
-  using Size = unsigned int;
+  using Size = int;
   using Coordinate = int;
   using CoordinatePair = std::pair<Coordinate, Coordinate>;
   class DrawableObject {

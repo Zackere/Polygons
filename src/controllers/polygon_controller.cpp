@@ -8,7 +8,8 @@
 namespace gk {
 PolygonController::~PolygonController() = default;
 
-bool PolygonController::OnMouseLButtonDown(DrawingBoard* board,
+bool PolygonController::OnMouseLButtonDown(
+    DrawingBoard* board,
     DrawingBoard::CoordinatePair mouse_pos) {
   bool ret = false;
   if (state_ == State::FREE) {
@@ -29,7 +30,8 @@ bool PolygonController::OnMouseLButtonUp(
   return ret;
 }
 
-bool PolygonController::OnMouseLButtonDoubleClick(DrawingBoard* board,
+bool PolygonController::OnMouseLButtonDoubleClick(
+    DrawingBoard* board,
     DrawingBoard::CoordinatePair mouse_pos) {
   switch (state_) {
     case gk::PolygonController::State::CREATE_POINT:
@@ -39,8 +41,9 @@ bool PolygonController::OnMouseLButtonDoubleClick(DrawingBoard* board,
     case gk::PolygonController::State::CREATE_LINE:
       if (last_click_.has_value()) {
         objects_.insert(std::make_unique<Line>(
-            last_click_.value(), Line::Vertex{mouse_pos.first, mouse_pos.second},
-            RGB(0, 255, 0), RGB(255, 0, 0)));
+            last_click_.value(),
+            Line::Vertex{mouse_pos.first, mouse_pos.second}, RGB(0, 255, 0),
+            RGB(255, 0, 0)));
         last_click_.reset();
         return true;
       } else {
@@ -73,16 +76,20 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
   switch (key_code) {
     case 'Q':
       state_ = State::FREE;
+      board->SetTitle(L"Free mode");
       break;
     case 'W':
       state_ = State::CREATE_POINT;
+      board->SetTitle(L"Point creation mode");
       break;
     case 'E':
       state_ = State::CREATE_LINE;
       last_click_.reset();
+      board->SetTitle(L"Line creation mode");
       break;
     case 'R':
       state_ = State::CREATE_POLYGON;
+      board->SetTitle(L"Polygon creation mode (not yet implemented)");
       break;
   }
   return false;
