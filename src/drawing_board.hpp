@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "controllers/controller.hpp"
+
 namespace gk {
 class DrawingBoard {
  public:
@@ -27,7 +29,8 @@ class DrawingBoard {
                SizeType width,
                SizeType height,
                SizeType pixel_size,
-               HINSTANCE hInstance);
+               HINSTANCE hInstance,
+               std::unique_ptr<Controller> controller);
   virtual ~DrawingBoard();
 
   bool Show() { return ShowWindow(window_, SW_RESTORE); }
@@ -53,9 +56,12 @@ class DrawingBoard {
                                   UINT message,
                                   WPARAM wParam,
                                   LPARAM lParam);
-  bool OnMouseLButtonDown(POINT mouse_pos);
-  bool OnMouseLButtonUp(POINT mouse_pos);
-  bool OnMouseMove(POINT mouse_pos);
+  void OnMouseLButtonDown(POINT mouse_pos);
+  void OnMouseLButtonUp(POINT mouse_pos);
+  void OnMouseLButtonDoubleClick(POINT mouse_pos);
+  void OnMouseMove(POINT mouse_pos);
+  void OnKeyDown(WPARAM key_code, bool was_down);
+  void OnKeyUp(WPARAM key_code);
 
   HWND window_;
   HDC window_hdc_;
@@ -66,6 +72,8 @@ class DrawingBoard {
 
   HDC hdc_mem_;
   HBITMAP off_screen_bitmap_;
+
+  std::unique_ptr<Controller> controller_;
 
   std::unordered_set<std::unique_ptr<DrawableObject>> objects_;
 

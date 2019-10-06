@@ -16,6 +16,9 @@
     <Filter Include="Drawable Objects">
       <UniqueIdentifier>{371af0d4-fb30-49bd-9b4b-5cd41c7ba0ac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Controllers">
+      <UniqueIdentifier>{98af9c75-1b04-4384-935c-653434a940b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\drawing_board.cpp">
@@ -34,6 +37,9 @@
     </ClInclude>
     <ClInclude Include="src\drawable_objects\point.hpp">
       <Filter>Drawable Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\controllers\controller.hpp">
+      <Filter>Controllers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

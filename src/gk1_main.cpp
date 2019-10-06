@@ -27,7 +27,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
   // Do not change these.
   gk::DrawingBoard::RegisterWindowClass(hInstance);
   gk::DrawingBoard window(kPosx, kPosy, kWidth / kPixelSize,
-                          kHeight / kPixelSize, kPixelSize, hInstance);
+                          kHeight / kPixelSize, kPixelSize, hInstance, nullptr);
   window.Show();
   RunMessageLoop();
   return 0;

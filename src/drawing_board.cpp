@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "controllers/controller.hpp"
 #include "drawable_objects/point.hpp"
 
 namespace gk {
@@ -43,14 +44,16 @@ DrawingBoard::DrawingBoard(SizeType posx,
                            SizeType width,
                            SizeType height,
                            SizeType pixel_size,
-                           HINSTANCE hInstance)
+                           HINSTANCE hInstance,
+                           std::unique_ptr<Controller> controller)
     : window_(NULL),
       window_hdc_(NULL),
       pixel_size_(pixel_size),
       drawing_board_width_(width),
       drawing_board_height_(height),
       hdc_mem_(NULL),
-      off_screen_bitmap_(NULL) {
+      off_screen_bitmap_(NULL),
+      controller_(std::move(controller)) {
   if (!(width > 0 && height > 0 && pixel_size > 0)) {
     MessageBox(NULL,
                "One of parameters is incorrect. (gk::DrawingBoard constructor)",
@@ -148,46 +151,42 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
         window->Display();
       return 0;
     }
-    case WM_LBUTTONDBLCLK: {
-      if (window) {
-        window->AddObject(std::make_unique<Point>(
-            std::complex<SizeType>{LOWORD(lParam) / window->GetPixelSize(),
-                                   HIWORD(lParam) / window->GetPixelSize()},
-            RGB(255, 0, 0)));
-        window->Display();
-      }
+    case WM_KEYDOWN:
+      if (window)
+        window->OnKeyDown(wParam, (lParam >> 30) & 1);
       return 0;
-    }
-    case WM_LBUTTONDOWN: {
-      if (window) {
-        if (window->OnMouseLButtonDown(POINT{
-                static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
-                static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())}))
-          window->Clear();
-        window->Display();
-      }
+    case WM_KEYUP:
+      if (window)
+        window->OnKeyUp(wParam);
       return 0;
-    }
-    case WM_LBUTTONUP: {
-      if (window) {
-        if (window->OnMouseLButtonUp(POINT{
-                static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
-                static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())}))
-          window->Clear();
-        window->Display();
-      }
+    case WM_LBUTTONDBLCLK:
+      if (window)
+        window->OnMouseLButtonDoubleClick(
+            POINT{static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
+                  static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())});
+
       return 0;
-    }
-    case WM_MOUSEMOVE: {
-      if (window) {
-        if (window->OnMouseMove(POINT{
-                static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
-                static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())}))
-          window->Clear();
-        window->Display();
-      }
+    case WM_LBUTTONDOWN:
+      if (window)
+        window->OnMouseLButtonDown(
+            POINT{static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
+                  static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())});
       return 0;
-    }
+    case WM_LBUTTONUP:
+      if (window)
+        window->OnMouseLButtonUp(
+            POINT{static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
+                  static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())});
+
+      return 0;
+    case WM_MOUSEMOVE:
+      if (window)
+        window->OnMouseMove(
+            POINT{static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
+                  static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())});
+
+      return 0;
+
     case WM_ERASEBKGND:
       return 1;
     case WM_DESTROY:
@@ -198,24 +197,45 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
   }
 }
 
-bool DrawingBoard::OnMouseLButtonDown(POINT mouse_pos) {
-  bool ret = false;
-  for (auto& object : objects_)
-    ret = ret || object->OnMouseLButtonDown(this, mouse_pos);
-  return ret;
+void DrawingBoard::OnMouseLButtonDown(POINT mouse_pos) {
+  if (controller_->OnMouseLButtonDown(this, mouse_pos)) {
+    Clear();
+    Display();
+  }
 }
 
-bool DrawingBoard::OnMouseLButtonUp(POINT mouse_pos) {
-  bool ret = false;
-  for (auto& object : objects_)
-    ret = ret || object->OnMouseLButtonUp(this, mouse_pos);
-  return ret;
+void DrawingBoard::OnMouseLButtonUp(POINT mouse_pos) {
+  if (controller_->OnMouseLButtonUp(this, mouse_pos)) {
+    Clear();
+    Display();
+  }
 }
 
-bool DrawingBoard::OnMouseMove(POINT mouse_pos) {
-  bool ret = false;
-  for (auto& object : objects_)
-    ret = ret || object->OnMouseMove(this, mouse_pos);
-  return ret;
+void DrawingBoard::OnMouseMove(POINT mouse_pos) {
+  if (controller_->OnMouseMove(this, mouse_pos)) {
+    Clear();
+    Display();
+  }
+}
+
+void DrawingBoard::OnKeyDown(WPARAM key_code, bool was_down) {
+  if (controller_->OnKeyDown(this, key_code, was_down)) {
+    Clear();
+    Display();
+  }
+}
+
+void DrawingBoard::OnKeyUp(WPARAM key_code) {
+  if (controller_->OnKeyUp(this, key_code)) {
+    Clear();
+    Display();
+  }
+}
+
+void DrawingBoard::OnMouseLButtonDoubleClick(POINT mouse_pos) {
+  if (controller_->OnMouseLButtonDoubleClick(this, mouse_pos)) {
+    Clear();
+    Display();
+  }
 }
 }  // namespace gk
