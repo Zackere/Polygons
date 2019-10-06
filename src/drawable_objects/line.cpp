@@ -73,46 +73,49 @@ void Line::Display(DrawingBoard* board) {
   board->SetPixel(end_.first, end_.second, vertex_color_);
 }
 
-bool Line::OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) {
-  if (mouse_pos.x == begin_.first && mouse_pos.y == begin_.second) {
+bool Line::OnMouseLButtonDown(DrawingBoard* board,
+                              DrawingBoard::CoordinatePair mouse_pos) {
+  if (mouse_pos.first == begin_.first && mouse_pos.second == begin_.second) {
     vertex_clicked_ = true;
     clicked_vertex_ = &begin_;
     line_clicked_ = false;
-    last_mouse_pos_.emplace(mouse_pos.x, mouse_pos.y);
-  } else if (mouse_pos.x == end_.first && mouse_pos.y == end_.second) {
+    last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
+  } else if (mouse_pos.first == end_.first && mouse_pos.second == end_.second) {
     vertex_clicked_ = true;
     clicked_vertex_ = &end_;
     line_clicked_ = false;
-    last_mouse_pos_.emplace(mouse_pos.x, mouse_pos.y);
+    last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
   } else if (std::find_if(line_points_.begin(), line_points_.end(),
                           [&mouse_pos](auto const& elem) {
-                            return elem.first == mouse_pos.x &&
-                                   elem.second == mouse_pos.y;
+                            return elem.first == mouse_pos.first &&
+                                   elem.second == mouse_pos.second;
                           }) != line_points_.end()) {
     vertex_clicked_ = false;
     line_clicked_ = true;
-    last_mouse_pos_.emplace(mouse_pos.x, mouse_pos.y);
+    last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
   }
   return false;
 }
 
-bool Line::OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) {
+bool Line::OnMouseLButtonUp(DrawingBoard* board,
+                            DrawingBoard::CoordinatePair mouse_pos) {
   vertex_clicked_ = line_clicked_ = false;
   last_mouse_pos_.reset();
   return false;
 }
 
-bool Line::OnMouseMove(DrawingBoard* board, POINT mouse_pos) {
+bool Line::OnMouseMove(DrawingBoard* board,
+                       DrawingBoard::CoordinatePair mouse_pos) {
   if (vertex_clicked_) {
-    *clicked_vertex_ = Vertex{mouse_pos.x, mouse_pos.y};
+    *clicked_vertex_ = Vertex{mouse_pos.first, mouse_pos.second};
     line_points_ = Bresenham(begin_, end_);
   } else if (line_clicked_) {
     begin_ =
-        Vertex{begin_.first + mouse_pos.x - last_mouse_pos_.value().first,
-               begin_.second + mouse_pos.y - last_mouse_pos_.value().second};
-    end_ = Vertex{end_.first + mouse_pos.x - last_mouse_pos_.value().first,
-                  end_.second + mouse_pos.y - last_mouse_pos_.value().second};
-    last_mouse_pos_.emplace(mouse_pos.x, mouse_pos.y);
+        Vertex{begin_.first + mouse_pos.first - last_mouse_pos_.value().first,
+               begin_.second + mouse_pos.second - last_mouse_pos_.value().second};
+    end_ = Vertex{end_.first + mouse_pos.first - last_mouse_pos_.value().first,
+                  end_.second + mouse_pos.second - last_mouse_pos_.value().second};
+    last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
     line_points_ = Bresenham(begin_, end_);
   }
   return vertex_clicked_ || line_clicked_;

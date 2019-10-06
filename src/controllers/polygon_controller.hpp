@@ -5,7 +5,9 @@
 #include <Windows.h>
 
 #include <memory>
+#include <optional>
 #include <unordered_set>
+#include <utility>
 
 #include "../drawing_board.hpp"
 #include "controller.hpp"
@@ -14,10 +16,16 @@ namespace gk {
 class PolygonController : public Controller {
  public:
   // Overridden from Controller
-  bool OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) override;
-  bool OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) override;
-  bool OnMouseLButtonDoubleClick(DrawingBoard* board, POINT mouse_pos) override;
-  bool OnMouseMove(DrawingBoard* board, POINT mouse_pos) override;
+  ~PolygonController() override;
+  bool OnMouseLButtonDown(DrawingBoard* board,
+                          DrawingBoard::CoordinatePair mouse_pos) override;
+  bool OnMouseLButtonUp(DrawingBoard* board,
+                        DrawingBoard::CoordinatePair mouse_pos) override;
+  bool OnMouseLButtonDoubleClick(
+      DrawingBoard* board,
+      DrawingBoard::CoordinatePair mouse_pos) override;
+  bool OnMouseMove(DrawingBoard* board,
+                   DrawingBoard::CoordinatePair mouse_pos) override;
   bool OnKeyDown(DrawingBoard* board, WPARAM key_code, bool was_down) override;
   bool OnKeyUp(DrawingBoard* board, WPARAM key_code) override;
   void Draw(DrawingBoard* board) override;
@@ -31,5 +39,7 @@ class PolygonController : public Controller {
     CREATE_POLYGON,
     TOTAL_STATES
   } state_ = State::FREE;
+
+  std::optional<DrawingBoard::CoordinatePair> last_click_;
 };
 }  // namespace gk

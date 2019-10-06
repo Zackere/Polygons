@@ -7,21 +7,24 @@
 #include <memory>
 #include <string_view>
 
-#include "controllers/controller.hpp"
-
 namespace gk {
+class Controller;
+
 class DrawingBoard {
  public:
+  using Size = unsigned int;
+  using Coordinate = int;
+  using CoordinatePair = std::pair<Coordinate, Coordinate>;
   class DrawableObject {
    public:
     virtual ~DrawableObject() = default;
     virtual void Display(DrawingBoard* board) = 0;
-    virtual bool OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) = 0;
-    virtual bool OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) = 0;
-    virtual bool OnMouseMove(DrawingBoard* board, POINT mouse_pos) = 0;
+    virtual bool OnMouseLButtonDown(DrawingBoard* board,
+                                    CoordinatePair mouse_pos) = 0;
+    virtual bool OnMouseLButtonUp(DrawingBoard* board,
+                                  CoordinatePair mouse_pos) = 0;
+    virtual bool OnMouseMove(DrawingBoard* board, CoordinatePair mouse_pos) = 0;
   };
-  using Size = unsigned int;
-  using Coordinate = int;
 
   static bool RegisterWindowClass(HINSTANCE hInstance);
   DrawingBoard(Size posx,
@@ -54,10 +57,10 @@ class DrawingBoard {
                                   UINT message,
                                   WPARAM wParam,
                                   LPARAM lParam);
-  void OnMouseLButtonDown(POINT mouse_pos);
-  void OnMouseLButtonUp(POINT mouse_pos);
-  void OnMouseLButtonDoubleClick(POINT mouse_pos);
-  void OnMouseMove(POINT mouse_pos);
+  void OnMouseLButtonDown(CoordinatePair mouse_pos);
+  void OnMouseLButtonUp(CoordinatePair mouse_pos);
+  void OnMouseLButtonDoubleClick(CoordinatePair mouse_pos);
+  void OnMouseMove(CoordinatePair mouse_pos);
   void OnKeyDown(WPARAM key_code, bool was_down);
   void OnKeyUp(WPARAM key_code);
 

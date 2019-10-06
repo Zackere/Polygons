@@ -4,16 +4,21 @@
 
 #include <Windows.h>
 
-namespace gk {
-class DrawingBoard;
+#include "../drawing_board.hpp"
 
+namespace gk {
 class Controller {
  public:
-  virtual bool OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) = 0;
-  virtual bool OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) = 0;
-  virtual bool OnMouseLButtonDoubleClick(DrawingBoard* board,
-                                         POINT mouse_pos) = 0;
-  virtual bool OnMouseMove(DrawingBoard* board, POINT mouse_pos) = 0;
+  virtual ~Controller() = default;
+  virtual bool OnMouseLButtonDown(DrawingBoard* board,
+                                  DrawingBoard::CoordinatePair mouse_pos) = 0;
+  virtual bool OnMouseLButtonUp(DrawingBoard* board,
+                                DrawingBoard::CoordinatePair mouse_pos) = 0;
+  virtual bool OnMouseLButtonDoubleClick(
+      DrawingBoard* board,
+      DrawingBoard::CoordinatePair mouse_pos) = 0;
+  virtual bool OnMouseMove(DrawingBoard* board,
+                           DrawingBoard::CoordinatePair mouse_pos) = 0;
   virtual bool OnKeyDown(DrawingBoard* board,
                          WPARAM key_code,
                          bool was_down) = 0;

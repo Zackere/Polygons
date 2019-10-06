@@ -157,28 +157,28 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     case WM_LBUTTONDBLCLK:
       if (window)
         window->OnMouseLButtonDoubleClick(
-            POINT{static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
-                  static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())});
+            std::make_pair(LOWORD(lParam) / window->GetPixelSize(),
+                           HIWORD(lParam) / window->GetPixelSize()));
 
       return 0;
     case WM_LBUTTONDOWN:
       if (window)
         window->OnMouseLButtonDown(
-            POINT{static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
-                  static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())});
+            std::make_pair(LOWORD(lParam) / window->GetPixelSize(),
+                           HIWORD(lParam) / window->GetPixelSize()));
       return 0;
     case WM_LBUTTONUP:
       if (window)
         window->OnMouseLButtonUp(
-            POINT{static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
-                  static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())});
+            std::make_pair(LOWORD(lParam) / window->GetPixelSize(),
+                           HIWORD(lParam) / window->GetPixelSize()));
 
       return 0;
     case WM_MOUSEMOVE:
       if (window)
         window->OnMouseMove(
-            POINT{static_cast<LONG>(LOWORD(lParam) / window->GetPixelSize()),
-                  static_cast<LONG>(HIWORD(lParam) / window->GetPixelSize())});
+            std::make_pair(LOWORD(lParam) / window->GetPixelSize(),
+                           HIWORD(lParam) / window->GetPixelSize()));
 
       return 0;
 
@@ -192,21 +192,21 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
   }
 }
 
-void DrawingBoard::OnMouseLButtonDown(POINT mouse_pos) {
+void DrawingBoard::OnMouseLButtonDown(CoordinatePair mouse_pos) {
   if (controller_->OnMouseLButtonDown(this, mouse_pos)) {
     Clear();
     Display();
   }
 }
 
-void DrawingBoard::OnMouseLButtonUp(POINT mouse_pos) {
+void DrawingBoard::OnMouseLButtonUp(CoordinatePair mouse_pos) {
   if (controller_->OnMouseLButtonUp(this, mouse_pos)) {
     Clear();
     Display();
   }
 }
 
-void DrawingBoard::OnMouseMove(POINT mouse_pos) {
+void DrawingBoard::OnMouseMove(CoordinatePair mouse_pos) {
   if (controller_->OnMouseMove(this, mouse_pos)) {
     Clear();
     Display();
@@ -227,7 +227,7 @@ void DrawingBoard::OnKeyUp(WPARAM key_code) {
   }
 }
 
-void DrawingBoard::OnMouseLButtonDoubleClick(POINT mouse_pos) {
+void DrawingBoard::OnMouseLButtonDoubleClick(CoordinatePair mouse_pos) {
   if (controller_->OnMouseLButtonDoubleClick(this, mouse_pos)) {
     Clear();
     Display();

@@ -24,9 +24,11 @@ class Line : public DrawingBoard::DrawableObject {
 
   // Overridden from DrawingBoard::DrawableObject
   void Display(DrawingBoard* board) override;
-  bool OnMouseLButtonDown(DrawingBoard* board, POINT mouse_pos) override;
-  bool OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) override;
-  bool OnMouseMove(DrawingBoard* board, POINT mouse_pos) override;
+  bool OnMouseLButtonDown(DrawingBoard* board, DrawingBoard::CoordinatePair mouse_pos) override;
+  bool OnMouseLButtonUp(DrawingBoard* board,
+                        DrawingBoard::CoordinatePair mouse_pos) override;
+  bool OnMouseMove(DrawingBoard* board,
+                   DrawingBoard::CoordinatePair mouse_pos) override;
 
  private:
   Vertex begin_;
