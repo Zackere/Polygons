@@ -5,10 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
@@ -19,11 +15,11 @@
     <Filter Include="Controllers">
       <UniqueIdentifier>{98af9c75-1b04-4384-935c-653434a940b6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Drawing Board">
+      <UniqueIdentifier>{e3d2ee61-bf6d-4e78-a28d-55b14ebb2b16}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\drawing_board.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\gk1_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -36,11 +32,11 @@
     <ClCompile Include="src\drawable_objects\line.cpp">
       <Filter>Drawable Objects</Filter>
     </ClCompile>
+    <ClCompile Include="src\drawing_board.cpp">
+      <Filter>Drawing Board</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\drawing_board.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\drawable_objects\point.hpp">
       <Filter>Drawable Objects</Filter>
     </ClInclude>
@@ -52,6 +48,9 @@
     </ClInclude>
     <ClInclude Include="src\drawable_objects\line.hpp">
       <Filter>Drawable Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\drawing_board.hpp">
+      <Filter>Drawing Board</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

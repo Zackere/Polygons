@@ -51,6 +51,8 @@ class DrawingBoard {
                std::wstring_view text,
                Size font_size,
                COLORREF color);
+  void ShowError(std::wstring error_message, bool fatal);
+  void SetTitle(std::wstring new_title);
 
  private:
   static LRESULT CALLBACK WndProc(HWND hWnd,

@@ -11,16 +11,16 @@ namespace gk {
 namespace {
 constexpr wchar_t kDrawingBoardClassName[] = L"gk::DrawingBoard";
 
-std::string GetErrorCodeString(int const error_code) {
+std::wstring GetErrorCodeString(const int error_code) {
   if (error_code == 0)
-    return std::string();
-  LPSTR message_buffer = nullptr;
-  const auto size = FormatMessageA(
+    return std::wstring();
+  LPWSTR message_buffer = nullptr;
+  const auto size = FormatMessageW(
       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
           FORMAT_MESSAGE_IGNORE_INSERTS,
       NULL, error_code, LANG_SYSTEM_DEFAULT,
-      reinterpret_cast<LPSTR>(&message_buffer), 0, NULL);
-  const std::string message(message_buffer, size);
+      reinterpret_cast<LPWSTR>(&message_buffer), 0, NULL);
+  const std::wstring message(message_buffer, size);
   LocalFree(message_buffer);
   return message;
 }
@@ -55,10 +55,8 @@ DrawingBoard::DrawingBoard(Size posx,
       off_screen_bitmap_(NULL),
       controller_(std::move(controller)) {
   if (!(width > 0 && height > 0 && pixel_size > 0)) {
-    MessageBox(NULL,
-               "One of parameters is incorrect. (gk::DrawingBoard constructor)",
-               nullptr, MB_ICONWARNING);
-    PostQuitMessage(1);
+    ShowError(L"One of parameters is incorrect. (gk::DrawingBoard constructor)",
+              true);
     return;
   }
 
@@ -75,9 +73,7 @@ DrawingBoard::DrawingBoard(Size posx,
       window_rect.right - window_rect.left,
       window_rect.bottom - window_rect.top, NULL, NULL, hInstance, nullptr);
   if (!window_) {
-    MessageBox(NULL, GetErrorCodeString(GetLastError()).c_str(), nullptr,
-               MB_ICONWARNING);
-    PostQuitMessage(GetLastError());
+    ShowError(GetErrorCodeString(GetLastError()), true);
     return;
   }
   SetWindowLongPtr(window_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
@@ -131,6 +127,16 @@ void DrawingBoard::DrawTxt(Coordinate posx,
   SetTextColor(hdc_mem_, old_color);
   SelectObject(hdc_mem_, old_font);
   DeleteObject(hFont);
+}
+
+void DrawingBoard::ShowError(std::wstring error_message, bool fatal) {
+  MessageBoxW(NULL, error_message.data(), nullptr, MB_ICONWARNING);
+  if (fatal)
+    PostQuitMessage(1);
+}
+
+void DrawingBoard::SetTitle(std::wstring new_title) {
+  SetWindowTextW(window_, new_title.data());
 }
 
 /* static */
