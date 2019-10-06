@@ -39,11 +39,11 @@ bool DrawingBoard::RegisterWindowClass(HINSTANCE hInstance) {
   return RegisterClassW(&window_class);
 }
 
-DrawingBoard::DrawingBoard(SizeType posx,
-                           SizeType posy,
-                           SizeType width,
-                           SizeType height,
-                           SizeType pixel_size,
+DrawingBoard::DrawingBoard(Size posx,
+                           Size posy,
+                           Size width,
+                           Size height,
+                           Size pixel_size,
                            HINSTANCE hInstance,
                            std::unique_ptr<Controller> controller)
     : window_(NULL),
@@ -111,14 +111,14 @@ void DrawingBoard::Clear() {
            reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
 }
 
-void DrawingBoard::SetPixel(SizeType x, SizeType y, COLORREF color) {
+void DrawingBoard::SetPixel(Coordinate x, Coordinate y, COLORREF color) {
   ::SetPixel(hdc_mem_, x, y, color);
 }
 
-void DrawingBoard::DrawTxt(SizeType posx,
-                           SizeType posy,
+void DrawingBoard::DrawTxt(Coordinate posx,
+                           Coordinate posy,
                            std::wstring_view text,
-                           SizeType font_size,
+                           Size font_size,
                            COLORREF color) {
   RECT rect{posx, posy, drawing_board_width_, drawing_board_height_};
   HFONT hFont;

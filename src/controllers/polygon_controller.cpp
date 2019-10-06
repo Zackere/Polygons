@@ -29,9 +29,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(DrawingBoard* board,
   switch (state_) {
     case gk::PolygonController::State::CREATE_POINT:
       objects_.insert(std::make_unique<Point>(
-          std::complex<DrawingBoard::SizeType>{
-              static_cast<DrawingBoard::SizeType>(mouse_pos.x),
-              static_cast<DrawingBoard::SizeType>(mouse_pos.y)},
+          std::complex<DrawingBoard::Coordinate>{mouse_pos.x, mouse_pos.y},
           RGB(255, 0, 0)));
       return true;
     case gk::PolygonController::State::CREATE_LINE:

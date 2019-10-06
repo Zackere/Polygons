@@ -5,7 +5,7 @@
 #include <utility>
 
 namespace gk {
-Point::Point(std::complex<DrawingBoard::SizeType> const& position,
+Point::Point(std::complex<DrawingBoard::Coordinate> const& position,
              COLORREF color)
     : position_(position), color_(color), clicked_(false) {}
 
@@ -25,9 +25,9 @@ bool Point::OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) {
 
 bool Point::OnMouseMove(DrawingBoard* board, POINT mouse_pos) {
   if (clicked_) {
-    std::complex<DrawingBoard::SizeType> new_pos{
-        static_cast<DrawingBoard::SizeType>(mouse_pos.x),
-        static_cast<DrawingBoard::SizeType>(mouse_pos.y)};
+    std::complex<DrawingBoard::Coordinate> new_pos{
+        static_cast<DrawingBoard::Coordinate>(mouse_pos.x),
+        static_cast<DrawingBoard::Coordinate>(mouse_pos.y)};
     if (new_pos != position_) {
       position_ = std::move(new_pos);
       return true;

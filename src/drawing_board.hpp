@@ -19,14 +19,15 @@ class DrawingBoard {
     virtual bool OnMouseLButtonUp(DrawingBoard* board, POINT mouse_pos) = 0;
     virtual bool OnMouseMove(DrawingBoard* board, POINT mouse_pos) = 0;
   };
-  using SizeType = unsigned int;
+  using Size = unsigned int;
+  using Coordinate = int;
 
   static bool RegisterWindowClass(HINSTANCE hInstance);
-  DrawingBoard(SizeType posx,
-               SizeType posy,
-               SizeType width,
-               SizeType height,
-               SizeType pixel_size,
+  DrawingBoard(Size posx,
+               Size posy,
+               Size width,
+               Size height,
+               Size pixel_size,
                HINSTANCE hInstance,
                std::unique_ptr<Controller> controller);
   virtual ~DrawingBoard();
@@ -35,16 +36,16 @@ class DrawingBoard {
   bool Hide() { return ShowWindow(window_, SW_MINIMIZE); }
   void Display();
 
-  SizeType GetPixelSize() const { return pixel_size_; }
-  SizeType GetWidth() const { return drawing_board_width_; }
-  SizeType GetHeight() const { return drawing_board_height_; }
+  Size GetPixelSize() const { return pixel_size_; }
+  Size GetWidth() const { return drawing_board_width_; }
+  Size GetHeight() const { return drawing_board_height_; }
 
   void Clear();
-  void SetPixel(SizeType x, SizeType y, COLORREF color);
-  void DrawTxt(SizeType posx,
-               SizeType posy,
+  void SetPixel(Coordinate x, Coordinate y, COLORREF color);
+  void DrawTxt(Coordinate posx,
+               Coordinate posy,
                std::wstring_view text,
-               SizeType font_size,
+               Size font_size,
                COLORREF color);
 
  private:
@@ -62,9 +63,9 @@ class DrawingBoard {
   HWND window_;
   HDC window_hdc_;
 
-  const SizeType pixel_size_;
-  const SizeType drawing_board_width_;
-  const SizeType drawing_board_height_;
+  const Size pixel_size_;
+  const Size drawing_board_width_;
+  const Size drawing_board_height_;
 
   HDC hdc_mem_;
   HBITMAP off_screen_bitmap_;
