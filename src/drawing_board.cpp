@@ -130,7 +130,8 @@ void DrawingBoard::DrawTxt(Coordinate posx,
 }
 
 void DrawingBoard::ShowError(std::wstring error_message, bool fatal) {
-  MessageBoxW(NULL, error_message.data(), nullptr, MB_ICONWARNING);
+  MessageBoxW(NULL, error_message.data(), nullptr,
+              fatal ? MB_ICONERROR : MB_ICONWARNING);
   if (fatal)
     PostQuitMessage(1);
 }
