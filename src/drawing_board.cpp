@@ -93,8 +93,8 @@ DrawingBoard::~DrawingBoard() {
 }
 
 void DrawingBoard::Display() {
-  RECT rect = {};
-  GetClientRect(window_, &rect);
+  const RECT rect = {0, 0, drawing_board_width_ * pixel_size_,
+                     drawing_board_height_ * pixel_size_};
   controller_->Draw(this);
   StretchBlt(window_hdc_, rect.left, rect.top, rect.right - rect.left,
              rect.bottom - rect.top, hdc_mem_, 0, 0, drawing_board_width_,
@@ -102,7 +102,7 @@ void DrawingBoard::Display() {
 }
 
 void DrawingBoard::Clear() {
-  RECT rect = {0, 0, drawing_board_width_, drawing_board_height_};
+  const RECT rect = {0, 0, drawing_board_width_, drawing_board_height_};
   FillRect(hdc_mem_, &rect,
            reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
 }

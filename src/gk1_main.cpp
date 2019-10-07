@@ -23,7 +23,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
   constexpr gk::DrawingBoard::Size kPosx = 0, kPosy = 0;
   constexpr gk::DrawingBoard::Size kPixelSize = 10;
   constexpr gk::DrawingBoard::Size kWidth = 1000;
-  constexpr gk::DrawingBoard::Size kHeight = 1000;
+  constexpr gk::DrawingBoard::Size kHeight = 900;
 
   // Do not change these.
   gk::DrawingBoard::RegisterWindowClass(hInstance);
