@@ -52,5 +52,8 @@
     <ClInclude Include="src\drawing_board.hpp">
       <Filter>Drawing Board</Filter>
     </ClInclude>
+    <ClInclude Include="src\drawable_objects\drawable_object.hpp">
+      <Filter>Drawable Objects</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

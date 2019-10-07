@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "../drawable_objects/drawable_object.hpp"
 #include "../drawing_board.hpp"
 #include "controller.hpp"
 
@@ -31,7 +32,7 @@ class PolygonController : public Controller {
   void Draw(DrawingBoard* board) override;
 
  private:
-  std::unordered_set<std::unique_ptr<DrawingBoard::DrawableObject>> objects_;
+  std::unordered_set<std::unique_ptr<DrawableObject>> objects_;
   enum class State {
     FREE,
     CREATE_POINT,

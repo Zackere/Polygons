@@ -7,9 +7,10 @@
 #include <utility>
 
 #include "../drawing_board.hpp"
+#include "drawable_object.hpp"
 
 namespace gk {
-class Point : public DrawingBoard::DrawableObject {
+class Point : public DrawableObject {
  public:
   Point(DrawingBoard::CoordinatePair const& position, COLORREF color);
   ~Point() override;

@@ -9,9 +9,10 @@
 #include <utility>
 
 #include "../drawing_board.hpp"
+#include "drawable_object.hpp"
 
 namespace gk {
-class Line : public DrawingBoard::DrawableObject {
+class Line : public DrawableObject {
  public:
   using Vertex = std::pair<DrawingBoard::Coordinate, DrawingBoard::Coordinate>;
 

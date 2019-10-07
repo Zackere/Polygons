@@ -28,6 +28,7 @@
   <ItemGroup>
     <ClInclude Include="src\controllers\controller.hpp" />
     <ClInclude Include="src\controllers\polygon_controller.hpp" />
+    <ClInclude Include="src\drawable_objects\drawable_object.hpp" />
     <ClInclude Include="src\drawable_objects\line.hpp" />
     <ClInclude Include="src\drawable_objects\point.hpp" />
     <ClInclude Include="src\drawing_board.hpp" />

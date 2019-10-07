@@ -16,16 +16,6 @@ class DrawingBoard {
   using Size = int;
   using Coordinate = int;
   using CoordinatePair = std::pair<Coordinate, Coordinate>;
-  class DrawableObject {
-   public:
-    virtual ~DrawableObject() = default;
-    virtual void Display(DrawingBoard* board) = 0;
-    virtual bool OnMouseLButtonDown(DrawingBoard* board,
-                                    CoordinatePair mouse_pos) = 0;
-    virtual bool OnMouseLButtonUp(DrawingBoard* board,
-                                  CoordinatePair mouse_pos) = 0;
-    virtual bool OnMouseMove(DrawingBoard* board, CoordinatePair mouse_pos) = 0;
-  };
 
   static bool RegisterWindowClass(HINSTANCE hInstance);
   DrawingBoard(Size posx,
