@@ -2,8 +2,8 @@
 
 #include "polygon_controller.hpp"
 
-#include "../drawable_objects/line.hpp"
 #include "../drawable_objects/point.hpp"
+#include "../drawable_objects/simple_line.hpp"
 
 namespace gk {
 PolygonController::~PolygonController() = default;
@@ -49,7 +49,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(
     }
     case gk::PolygonController::State::CREATE_LINE:
       if (last_click_.has_value()) {
-        AddObject(std::make_unique<Line>(
+        AddObject(std::make_unique<SimpleLine>(
             last_click_.value(),
             DrawingBoard::CoordinatePair{mouse_pos.first, mouse_pos.second},
             RGB(0, 255, 0), RGB(255, 0, 0)));
@@ -77,11 +77,10 @@ bool PolygonController::OnMouseLButtonDoubleClick(
 
 bool PolygonController::OnMouseMove(DrawingBoard* board,
                                     DrawingBoard::CoordinatePair mouse_pos) {
-
   if (state_ == State::FREE) {
     for (auto& obj : objects_)
-      if(obj->OnMouseMove(board, mouse_pos))
-		  return true;
+      if (obj->OnMouseMove(board, mouse_pos))
+        return true;
   }
   return false;
 }

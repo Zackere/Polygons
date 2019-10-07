@@ -6,7 +6,6 @@
 
 #include <list>
 #include <optional>
-#include <utility>
 
 #include "../drawing_board.hpp"
 #include "drawable_object.hpp"
@@ -25,31 +24,33 @@ class Line : public DrawableObject {
 
   // Overridden from DrawingBoard::DrawableObject
   void Display(DrawingBoard* board) override;
-  bool OnMouseLButtonDown(
-      DrawingBoard* board,
-      DrawingBoard::CoordinatePair const& mouse_pos) override;
+  bool OnMouseLButtonDown(DrawingBoard* board,
+                          DrawingBoard::CoordinatePair const& mouse_pos) = 0;
   bool OnMouseLButtonUp(DrawingBoard* board,
-                        DrawingBoard::CoordinatePair const& mouse_pos) override;
+                        DrawingBoard::CoordinatePair const& mouse_pos) = 0;
   bool OnMouseMove(DrawingBoard* board,
-                   DrawingBoard::CoordinatePair const& mouse_pos) override;
-  bool Contains(DrawingBoard::CoordinatePair const& point) override;
-  bool IsVertex(DrawingBoard::CoordinatePair const& point) override;
-  bool RequestRemoval(DrawingBoard::CoordinatePair const& point) override;
+                   DrawingBoard::CoordinatePair const& mouse_pos) = 0;
+  bool Contains(DrawingBoard::CoordinatePair const& point);
+  bool IsVertex(DrawingBoard::CoordinatePair const& point);
+  bool RequestRemoval(DrawingBoard::CoordinatePair const& point) = 0;
   bool AddVertex(DrawingBoard::CoordinatePair const& point,
-                 Controller* controller) override;
+                 Controller* controller) = 0;
+
+  DrawingBoard::CoordinatePair const& GetBegin() const { return begin_; }
+  DrawingBoard::CoordinatePair const& GetEnd() const { return end_; }
+  void SetBegin(DrawingBoard::CoordinatePair const& val);
+  void SetEnd(DrawingBoard::CoordinatePair const& val);
+  COLORREF GetColor() const { return color_; }
+  COLORREF GetVertexColor() const { return vertex_color_; }
 
  private:
+  void Recalculate();
+
   DrawingBoard::CoordinatePair begin_;
   DrawingBoard::CoordinatePair end_;
   COLORREF color_;
   COLORREF vertex_color_;
 
   std::list<DrawingBoard::CoordinatePair> line_points_;
-
-  bool vertex_clicked_ = false;
-  DrawingBoard::CoordinatePair* clicked_vertex_ = nullptr;
-  bool line_clicked_ = false;
-
-  std::optional<DrawingBoard::CoordinatePair> last_mouse_pos_;
 };
 }  // namespace gk

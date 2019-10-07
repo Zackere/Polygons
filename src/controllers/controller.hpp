@@ -4,6 +4,8 @@
 
 #include <Windows.h>
 
+#include <memory>
+
 #include "../drawing_board.hpp"
 
 namespace gk {

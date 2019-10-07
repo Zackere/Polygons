@@ -29,11 +29,14 @@
     <ClCompile Include="src\controllers\polygon_controller.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
-    <ClCompile Include="src\drawable_objects\line.cpp">
-      <Filter>Drawable Objects</Filter>
-    </ClCompile>
     <ClCompile Include="src\drawing_board.cpp">
       <Filter>Drawing Board</Filter>
+    </ClCompile>
+    <ClCompile Include="src\drawable_objects\simple_line.cpp">
+      <Filter>Drawable Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\drawable_objects\line.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -46,13 +49,19 @@
     <ClInclude Include="src\controllers\polygon_controller.hpp">
       <Filter>Controllers</Filter>
     </ClInclude>
-    <ClInclude Include="src\drawable_objects\line.hpp">
-      <Filter>Drawable Objects</Filter>
-    </ClInclude>
     <ClInclude Include="src\drawing_board.hpp">
       <Filter>Drawing Board</Filter>
     </ClInclude>
     <ClInclude Include="src\drawable_objects\drawable_object.hpp">
+      <Filter>Drawable Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\drawable_objects\polygon.hpp">
+      <Filter>Drawable Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\drawable_objects\simple_line.hpp">
+      <Filter>Drawable Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\drawable_objects\line.hpp">
       <Filter>Drawable Objects</Filter>
     </ClInclude>
   </ItemGroup>
