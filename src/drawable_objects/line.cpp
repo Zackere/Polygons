@@ -10,33 +10,60 @@ namespace {
 
 std::list<Line::Vertex> Bresenham(Line::Vertex begin, Line::Vertex end) {
   std::list<Line::Vertex> ret;
-
-  const bool steep =
-      std::abs(begin.second - end.second) > std::abs(begin.first - end.first);
-
-  if (steep) {
-    begin = Line::Vertex{begin.second, begin.first};
-    end = Line::Vertex{end.second, end.first};
-  }
-
-  if (begin.first > end.first)
-    std::swap(begin, end);
-
-  const double dx = static_cast<double>(end.first) - begin.first;
-  const DrawingBoard::Coordinate dy = std::abs(begin.second - end.second);
-
-  double err = dx / 2.f;
-  const int ystep = (begin.second < end.second) ? 1 : -1;
-  DrawingBoard::Coordinate y = begin.second;
-
-  const DrawingBoard::Coordinate max_x = end.first;
-
-  for (DrawingBoard::Coordinate x = begin.first; x < max_x; ++x) {
-    ret.emplace_back(steep ? Line::Vertex{y, x} : Line::Vertex{x, y});
-    err -= dy;
-    if (err < 0) {
-      y += ystep;
-      err += dx;
+  DrawingBoard::Coordinate x, y, i, xe, ye;
+  DrawingBoard::Coordinate dx = end.first - begin.first;
+  DrawingBoard::Coordinate dy = end.second - begin.second;
+  DrawingBoard::Coordinate dx1 = std::abs(dx);
+  DrawingBoard::Coordinate dy1 = std::abs(dy);
+  DrawingBoard::Coordinate px = 2 * dy1 - dx1;
+  DrawingBoard::Coordinate py = 2 * dx1 - dy1;
+  if (dy1 <= dx1) {
+    if (dx >= 0) {
+      x = begin.first;
+      y = begin.second;
+      xe = end.first;
+    } else {
+      x = end.first;
+      y = end.second;
+      xe = begin.first;
+    }
+    ret.emplace_back(x, y);
+    for (i = 0; x < xe; ++i) {
+      ++x;
+      if (px < 0) {
+        px += 2 * dy1;
+      } else {
+        if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
+          ++y;
+        else
+          --y;
+        px += 2 * (dy1 - dx1);
+      }
+      ret.emplace_back(x, y);
+    }
+  } else {
+    if (dy >= 0) {
+      x = begin.first;
+      y = begin.second;
+      ye = end.second;
+    } else {
+      x = end.first;
+      y = end.second;
+      ye = begin.second;
+    }
+    ret.emplace_back(x, y);
+    for (i = 0; y < ye; ++i) {
+      ++y;
+      if (py <= 0) {
+        py += 2 * dx1;
+      } else {
+        if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
+          ++x;
+        else
+          --x;
+        py += 2 * (dx1 - dy1);
+      }
+      ret.emplace_back(x, y);
     }
   }
   return ret;
