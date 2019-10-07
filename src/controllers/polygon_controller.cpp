@@ -35,15 +35,24 @@ bool PolygonController::OnMouseLButtonDoubleClick(
     DrawingBoard::CoordinatePair mouse_pos) {
   switch (state_) {
     case gk::PolygonController::State::CREATE_POINT:
-      objects_.insert(std::make_unique<Point>(
-          std::make_pair(mouse_pos.first, mouse_pos.second), RGB(255, 0, 0)));
+      AddObject(std::make_unique<Point>(mouse_pos, RGB(255, 0, 0)));
       return true;
+    case gk::PolygonController::State::CREATE_VERTEX: {
+      for (auto it = objects_.begin(); it != objects_.end();) {
+        auto& object = *it;
+        if (!object->AddVertex(mouse_pos, this))
+          it = objects_.erase(it);
+        else
+          ++it;
+      }
+      return true;
+    }
     case gk::PolygonController::State::CREATE_LINE:
       if (last_click_.has_value()) {
-        objects_.insert(std::make_unique<Line>(
+        AddObject(std::make_unique<Line>(
             last_click_.value(),
-            Line::Vertex{mouse_pos.first, mouse_pos.second}, RGB(0, 255, 0),
-            RGB(255, 0, 0)));
+            DrawingBoard::CoordinatePair{mouse_pos.first, mouse_pos.second},
+            RGB(0, 255, 0), RGB(255, 0, 0)));
         last_click_.reset();
         return true;
       } else {
@@ -52,6 +61,16 @@ bool PolygonController::OnMouseLButtonDoubleClick(
       }
     case gk::PolygonController::State::CREATE_POLYGON:
       break;
+    case gk::PolygonController::State::PURE_DESTRUCTION: {
+      for (auto it = objects_.begin(); it != objects_.end();) {
+        auto& object = *it;
+        if (!object->RequestRemoval(mouse_pos))
+          it = objects_.erase(it);
+        else
+          ++it;
+      }
+      return true;
+    }
   }
   return false;
 }
@@ -79,8 +98,8 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
       board->SetTitle(L"Free mode");
       break;
     case 'W':
-      state_ = State::CREATE_POINT;
-      board->SetTitle(L"Point creation mode");
+      state_ = State::CREATE_VERTEX;
+      board->SetTitle(L"Vertex creation mode");
       break;
     case 'E':
       state_ = State::CREATE_LINE;
@@ -91,6 +110,14 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
       state_ = State::CREATE_POLYGON;
       board->SetTitle(L"Polygon creation mode (not yet implemented)");
       break;
+    case 'T':
+      state_ = State::CREATE_POINT;
+      board->SetTitle(L"Point creation mode");
+      break;
+    case 'D':
+      state_ = gk::PolygonController::State::PURE_DESTRUCTION;
+      board->SetTitle(L"Object deletion mode");
+      break;
   }
   return false;
 }
@@ -98,5 +125,9 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
 void PolygonController::Draw(DrawingBoard* board) {
   for (auto& obj : objects_)
     obj->Display(board);
+}
+
+void PolygonController::AddObject(std::unique_ptr<DrawableObject> object) {
+  objects_.push_front(std::move(object));
 }
 }  // namespace gk

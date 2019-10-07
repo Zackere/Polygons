@@ -17,12 +17,18 @@ class Point : public DrawableObject {
 
   // Overridden from DrawingBoard::DrawableObject
   void Display(DrawingBoard* board) override;
-  bool OnMouseLButtonDown(DrawingBoard* board,
-                          DrawingBoard::CoordinatePair mouse_pos) override;
+  bool OnMouseLButtonDown(
+      DrawingBoard* board,
+      DrawingBoard::CoordinatePair const& mouse_pos) override;
   bool OnMouseLButtonUp(DrawingBoard* board,
-                        DrawingBoard::CoordinatePair mouse_pos) override;
+                        DrawingBoard::CoordinatePair const& mouse_pos) override;
   bool OnMouseMove(DrawingBoard* board,
-                   DrawingBoard::CoordinatePair mouse_pos) override;
+                   DrawingBoard::CoordinatePair const& mouse_pos) override;
+  bool Contains(DrawingBoard::CoordinatePair const& point) override;
+  bool IsVertex(DrawingBoard::CoordinatePair const& point) override;
+  bool RequestRemoval(DrawingBoard::CoordinatePair const& point) override;
+  bool AddVertex(DrawingBoard::CoordinatePair const& point,
+                 Controller* controller) override;
 
  private:
   DrawingBoard::CoordinatePair position_;

@@ -7,6 +7,8 @@
 #include "../drawing_board.hpp"
 
 namespace gk {
+class DrawableObject;
+
 class Controller {
  public:
   virtual ~Controller() = default;
@@ -24,5 +26,6 @@ class Controller {
                          bool was_down) = 0;
   virtual bool OnKeyUp(DrawingBoard* board, WPARAM key_code) = 0;
   virtual void Draw(DrawingBoard* board) = 0;
+  virtual void AddObject(std::unique_ptr<DrawableObject> object) = 0;
 };
 }  // namespace gk

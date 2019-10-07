@@ -13,19 +13,20 @@ void Point::Display(DrawingBoard* board) {
 }
 
 bool Point::OnMouseLButtonDown(DrawingBoard* board,
-                               DrawingBoard::CoordinatePair mouse_pos) {
-  clicked_ = mouse_pos.first == position_.first && mouse_pos.second == position_.second;
+                               DrawingBoard::CoordinatePair const& mouse_pos) {
+  clicked_ = mouse_pos.first == position_.first &&
+             mouse_pos.second == position_.second;
   return false;
 }
 
 bool Point::OnMouseLButtonUp(DrawingBoard* board,
-                             DrawingBoard::CoordinatePair mouse_pos) {
+                             DrawingBoard::CoordinatePair const& mouse_pos) {
   clicked_ = false;
   return false;
 }
 
 bool Point::OnMouseMove(DrawingBoard* board,
-                        DrawingBoard::CoordinatePair mouse_pos) {
+                        DrawingBoard::CoordinatePair const& mouse_pos) {
   if (clicked_) {
     DrawingBoard::CoordinatePair new_pos =
         std::make_pair(mouse_pos.first, mouse_pos.second);
@@ -35,5 +36,22 @@ bool Point::OnMouseMove(DrawingBoard* board,
     }
   }
   return false;
+}
+
+bool Point::Contains(DrawingBoard::CoordinatePair const& point) {
+  return position_ == point;
+}
+
+bool Point::IsVertex(DrawingBoard::CoordinatePair const& point) {
+  return Contains(point);
+}
+
+bool Point::RequestRemoval(DrawingBoard::CoordinatePair const& point) {
+  return !Contains(point);
+}
+
+bool Point::AddVertex(DrawingBoard::CoordinatePair const& point,
+                      Controller* controller) {
+  return true;
 }
 }  // namespace gk

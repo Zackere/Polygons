@@ -5,11 +5,15 @@
 #include <algorithm>
 #include <cmath>
 
+#include "../controllers/controller.hpp"
+
 namespace gk {
 namespace {
 
-std::list<Line::Vertex> Bresenham(Line::Vertex begin, Line::Vertex end) {
-  std::list<Line::Vertex> ret;
+std::list<DrawingBoard::CoordinatePair> Bresenham(
+    DrawingBoard::CoordinatePair begin,
+    DrawingBoard::CoordinatePair end) {
+  std::list<DrawingBoard::CoordinatePair> ret;
   DrawingBoard::Coordinate x, y, i, xe, ye;
   DrawingBoard::Coordinate dx = end.first - begin.first;
   DrawingBoard::Coordinate dy = end.second - begin.second;
@@ -70,7 +74,9 @@ std::list<Line::Vertex> Bresenham(Line::Vertex begin, Line::Vertex end) {
 }
 }  // namespace
 
-Line::Line(Vertex const& begin, Vertex const& end, COLORREF color)
+Line::Line(DrawingBoard::CoordinatePair const& begin,
+           DrawingBoard::CoordinatePair const& end,
+           COLORREF color)
     : begin_(begin),
       end_(end),
       color_(color),
@@ -79,8 +85,8 @@ Line::Line(Vertex const& begin, Vertex const& end, COLORREF color)
       vertex_clicked_(false),
       line_clicked_(false) {}
 
-Line::Line(Vertex const& begin,
-           Vertex const& end,
+Line::Line(DrawingBoard::CoordinatePair const& begin,
+           DrawingBoard::CoordinatePair const& end,
            COLORREF color,
            COLORREF vertex_color)
     : begin_(begin),
@@ -101,7 +107,7 @@ void Line::Display(DrawingBoard* board) {
 }
 
 bool Line::OnMouseLButtonDown(DrawingBoard* board,
-                              DrawingBoard::CoordinatePair mouse_pos) {
+                              DrawingBoard::CoordinatePair const& mouse_pos) {
   if (mouse_pos.first == begin_.first && mouse_pos.second == begin_.second) {
     vertex_clicked_ = true;
     clicked_vertex_ = &begin_;
@@ -125,28 +131,56 @@ bool Line::OnMouseLButtonDown(DrawingBoard* board,
 }
 
 bool Line::OnMouseLButtonUp(DrawingBoard* board,
-                            DrawingBoard::CoordinatePair mouse_pos) {
+                            DrawingBoard::CoordinatePair const& mouse_pos) {
   vertex_clicked_ = line_clicked_ = false;
   last_mouse_pos_.reset();
   return false;
 }
 
 bool Line::OnMouseMove(DrawingBoard* board,
-                       DrawingBoard::CoordinatePair mouse_pos) {
+                       DrawingBoard::CoordinatePair const& mouse_pos) {
   if (vertex_clicked_) {
-    *clicked_vertex_ = Vertex{mouse_pos.first, mouse_pos.second};
+    *clicked_vertex_ =
+        DrawingBoard::CoordinatePair{mouse_pos.first, mouse_pos.second};
     line_points_ = Bresenham(begin_, end_);
   } else if (line_clicked_) {
-    begin_ = Vertex{
+    begin_ = DrawingBoard::CoordinatePair{
         begin_.first + mouse_pos.first - last_mouse_pos_.value().first,
         begin_.second + mouse_pos.second - last_mouse_pos_.value().second};
-    end_ =
-        Vertex{end_.first + mouse_pos.first - last_mouse_pos_.value().first,
-               end_.second + mouse_pos.second - last_mouse_pos_.value().second};
+    end_ = DrawingBoard::CoordinatePair{
+        end_.first + mouse_pos.first - last_mouse_pos_.value().first,
+        end_.second + mouse_pos.second - last_mouse_pos_.value().second};
     last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
     line_points_ = Bresenham(begin_, end_);
   }
   return vertex_clicked_ || line_clicked_;
+}
+
+bool Line::Contains(DrawingBoard::CoordinatePair const& point) {
+  if (line_points_.empty())
+    line_points_ = Bresenham(begin_, end_);
+  return std::find(line_points_.begin(), line_points_.end(), point) !=
+         line_points_.end();
+}
+
+bool Line::IsVertex(DrawingBoard::CoordinatePair const& point) {
+  return point == begin_ || point == end_;
+}
+
+bool Line::RequestRemoval(DrawingBoard::CoordinatePair const& point) {
+  return !Contains(point);
+}
+
+bool Line::AddVertex(DrawingBoard::CoordinatePair const& point,
+                     Controller* controller) {
+  if (Contains(point) && !IsVertex(point)) {
+    controller->AddObject(
+        std::make_unique<Line>(begin_, point, color_, vertex_color_));
+    controller->AddObject(
+        std::make_unique<Line>(point, end_, color_, vertex_color_));
+    return false;
+  }
+  return true;
 }
 
 }  // namespace gk
