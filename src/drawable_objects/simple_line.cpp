@@ -67,12 +67,8 @@ bool SimpleLine::OnMouseMove(DrawingBoard* board,
     else
       SetEnd(DrawingBoard::CoordinatePair{mouse_pos.first, mouse_pos.second});
   } else if (line_clicked_) {
-    SetBegin(DrawingBoard::CoordinatePair{
-        GetBegin().first + mouse_pos.first - last_mouse_pos_.value().first,
-        GetBegin().second + mouse_pos.second - last_mouse_pos_.value().second});
-    SetEnd(DrawingBoard::CoordinatePair{
-        GetEnd().first + mouse_pos.first - last_mouse_pos_.value().first,
-        GetEnd().second + mouse_pos.second - last_mouse_pos_.value().second});
+    MoveByVector({mouse_pos.first - last_mouse_pos_.value().first,
+                  mouse_pos.second - last_mouse_pos_.value().second});
     last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
   }
   return vertex_clicked_ || line_clicked_;

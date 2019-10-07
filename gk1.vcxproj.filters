@@ -36,7 +36,7 @@
       <Filter>Drawable Objects</Filter>
     </ClCompile>
     <ClCompile Include="src\drawable_objects\line.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Drawable Objects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

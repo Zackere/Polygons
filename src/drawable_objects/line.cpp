@@ -104,6 +104,14 @@ void Line::SetEnd(DrawingBoard::CoordinatePair const& val) {
   }
 }
 
+void Line::MoveByVector(DrawingBoard::CoordinatePair const& vector) {
+  if (vector != DrawingBoard::CoordinatePair{0, 0}) {
+    begin_ = {begin_.first + vector.first, begin_.second + vector.second};
+    end_ = {end_.first + vector.first, end_.second + vector.second};
+    Recalculate();
+  }
+}
+
 void Line::Recalculate() {
   line_points_ = Bresenham(begin_, end_);
 }

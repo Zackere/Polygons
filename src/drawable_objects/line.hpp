@@ -40,6 +40,7 @@ class Line : public DrawableObject {
   DrawingBoard::CoordinatePair const& GetEnd() const { return end_; }
   void SetBegin(DrawingBoard::CoordinatePair const& val);
   void SetEnd(DrawingBoard::CoordinatePair const& val);
+  void MoveByVector(DrawingBoard::CoordinatePair const& vector);
   COLORREF GetColor() const { return color_; }
   COLORREF GetVertexColor() const { return vertex_color_; }
 
