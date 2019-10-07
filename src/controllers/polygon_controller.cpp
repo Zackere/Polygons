@@ -11,12 +11,12 @@ PolygonController::~PolygonController() = default;
 bool PolygonController::OnMouseLButtonDown(
     DrawingBoard* board,
     DrawingBoard::CoordinatePair mouse_pos) {
-  bool ret = false;
   if (state_ == State::FREE) {
     for (auto& obj : objects_)
-      ret = obj->OnMouseLButtonDown(board, mouse_pos) || ret;
+      if (obj->OnMouseLButtonDown(board, mouse_pos))
+        return true;
   }
-  return ret;
+  return false;
 }
 
 bool PolygonController::OnMouseLButtonUp(
@@ -77,12 +77,13 @@ bool PolygonController::OnMouseLButtonDoubleClick(
 
 bool PolygonController::OnMouseMove(DrawingBoard* board,
                                     DrawingBoard::CoordinatePair mouse_pos) {
-  bool ret = false;
+
   if (state_ == State::FREE) {
     for (auto& obj : objects_)
-      ret = obj->OnMouseMove(board, mouse_pos) || ret;
+      if(obj->OnMouseMove(board, mouse_pos))
+		  return true;
   }
-  return ret;
+  return false;
 }
 
 bool PolygonController::OnKeyDown(DrawingBoard* board,

@@ -30,10 +30,9 @@ bool Point::OnMouseMove(DrawingBoard* board,
   if (clicked_) {
     DrawingBoard::CoordinatePair new_pos =
         std::make_pair(mouse_pos.first, mouse_pos.second);
-    if (new_pos != position_) {
+    if (new_pos != position_)
       position_ = std::move(new_pos);
-      return true;
-    }
+    return true;
   }
   return false;
 }
