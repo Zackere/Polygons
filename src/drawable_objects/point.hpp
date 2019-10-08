@@ -29,6 +29,7 @@ class Point : public DrawableObject {
   bool RequestRemoval(DrawingBoard::CoordinatePair const& point) override;
   bool AddVertex(DrawingBoard::CoordinatePair const& point,
                  Controller* controller) override;
+  void OnControllerStateChanged(Controller* controller) override;
 
  private:
   DrawingBoard::CoordinatePair position_;

@@ -94,4 +94,9 @@ bool SimpleLine::AddVertex(DrawingBoard::CoordinatePair const& point,
   return true;
 }
 
+void SimpleLine::OnControllerStateChanged(Controller* controller) {
+  vertex_clicked_ = begin_clicked_ = line_clicked_ = false;
+  last_mouse_pos_.reset();
+}
+
 }  // namespace gk

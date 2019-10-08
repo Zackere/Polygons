@@ -35,6 +35,7 @@ class SimpleLine : public Line {
   bool RequestRemoval(DrawingBoard::CoordinatePair const& point) override;
   bool AddVertex(DrawingBoard::CoordinatePair const& point,
                  Controller* controller) override;
+  void OnControllerStateChanged(Controller* controller) override;
 
  private:
   bool vertex_clicked_ = false;

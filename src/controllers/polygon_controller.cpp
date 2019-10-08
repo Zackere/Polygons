@@ -92,6 +92,7 @@ bool PolygonController::OnKeyDown(DrawingBoard* board,
 }
 
 bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
+  State old_state = state_;
   switch (key_code) {
     case 'Q':
       state_ = State::FREE;
@@ -119,6 +120,9 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
       board->SetTitle(L"Object deletion mode");
       break;
   }
+  if (old_state != state_)
+    for (auto& object : objects_)
+      object->OnControllerStateChanged(this);
   return false;
 }
 

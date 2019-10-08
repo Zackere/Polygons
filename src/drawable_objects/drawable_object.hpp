@@ -24,5 +24,6 @@ class DrawableObject {
   virtual bool RequestRemoval(DrawingBoard::CoordinatePair const& point) = 0;
   virtual bool AddVertex(DrawingBoard::CoordinatePair const& point,
                          Controller* controller) = 0;
+  virtual void OnControllerStateChanged(Controller* controller) = 0;
 };
 }  // namespace gk

@@ -35,6 +35,7 @@ class Line : public DrawableObject {
   bool RequestRemoval(DrawingBoard::CoordinatePair const& point) = 0;
   bool AddVertex(DrawingBoard::CoordinatePair const& point,
                  Controller* controller) = 0;
+  void OnControllerStateChanged(Controller* controller) = 0;
 
   DrawingBoard::CoordinatePair const& GetBegin() const { return begin_; }
   DrawingBoard::CoordinatePair const& GetEnd() const { return end_; }

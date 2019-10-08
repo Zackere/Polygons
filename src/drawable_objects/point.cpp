@@ -53,4 +53,8 @@ bool Point::AddVertex(DrawingBoard::CoordinatePair const& point,
                       Controller* controller) {
   return true;
 }
+
+void Point::OnControllerStateChanged(Controller* controller) {
+  clicked_ = false;
+}
 }  // namespace gk
