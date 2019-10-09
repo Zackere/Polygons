@@ -5,10 +5,11 @@
 #include <Windows.h>
 
 #include <utility>
+#include <memory>
 
 #include "../drawing_board.hpp"
 #include "drawable_object.hpp"
-#include "line.hpp"
+#include "polygon_line.hpp"
 
 namespace gk {
 class Polygon : public DrawableObject {
@@ -37,11 +38,13 @@ class Polygon : public DrawableObject {
   void OnControllerStateChanged(Controller* controller) override;
 
  private:
-  class PolygonLine : public Line {};
-
   COLORREF color_;
   COLORREF vertex_color_;
 
+  std::unique_ptr<PolygonLine> body_;
+
   bool clicked_ = false;
+
+  unsigned int nverticies_ = 3;
 };
 }  // namespace gk

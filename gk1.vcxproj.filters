@@ -18,13 +18,19 @@
     <Filter Include="Drawing Board">
       <UniqueIdentifier>{e3d2ee61-bf6d-4e78-a28d-55b14ebb2b16}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Drawable Objects\Line">
+      <UniqueIdentifier>{8636da22-0aaf-4f62-ae34-d07cacdf288d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawable Objects\Polygon">
+      <UniqueIdentifier>{86cb544b-758f-4702-9d07-5696644904cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawable Objects\Point">
+      <UniqueIdentifier>{5388eb96-2d7c-4efc-93bf-27ec9a0dfd0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gk1_main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\drawable_objects\point.cpp">
-      <Filter>Drawable Objects</Filter>
     </ClCompile>
     <ClCompile Include="src\controllers\polygon_controller.cpp">
       <Filter>Controllers</Filter>
@@ -32,17 +38,23 @@
     <ClCompile Include="src\drawing_board.cpp">
       <Filter>Drawing Board</Filter>
     </ClCompile>
-    <ClCompile Include="src\drawable_objects\simple_line.cpp">
-      <Filter>Drawable Objects</Filter>
-    </ClCompile>
     <ClCompile Include="src\drawable_objects\line.cpp">
-      <Filter>Drawable Objects</Filter>
+      <Filter>Drawable Objects\Line</Filter>
+    </ClCompile>
+    <ClCompile Include="src\drawable_objects\simple_line.cpp">
+      <Filter>Drawable Objects\Line</Filter>
+    </ClCompile>
+    <ClCompile Include="src\drawable_objects\polygon_line.cpp">
+      <Filter>Drawable Objects\Polygon</Filter>
+    </ClCompile>
+    <ClCompile Include="src\drawable_objects\polygon.cpp">
+      <Filter>Drawable Objects\Polygon</Filter>
+    </ClCompile>
+    <ClCompile Include="src\drawable_objects\point.cpp">
+      <Filter>Drawable Objects\Point</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\drawable_objects\point.hpp">
-      <Filter>Drawable Objects</Filter>
-    </ClInclude>
     <ClInclude Include="src\controllers\controller.hpp">
       <Filter>Controllers</Filter>
     </ClInclude>
@@ -55,14 +67,20 @@
     <ClInclude Include="src\drawable_objects\drawable_object.hpp">
       <Filter>Drawable Objects</Filter>
     </ClInclude>
-    <ClInclude Include="src\drawable_objects\polygon.hpp">
-      <Filter>Drawable Objects</Filter>
+    <ClInclude Include="src\drawable_objects\line.hpp">
+      <Filter>Drawable Objects\Line</Filter>
     </ClInclude>
     <ClInclude Include="src\drawable_objects\simple_line.hpp">
-      <Filter>Drawable Objects</Filter>
+      <Filter>Drawable Objects\Line</Filter>
     </ClInclude>
-    <ClInclude Include="src\drawable_objects\line.hpp">
-      <Filter>Drawable Objects</Filter>
+    <ClInclude Include="src\drawable_objects\polygon_line.hpp">
+      <Filter>Drawable Objects\Polygon</Filter>
+    </ClInclude>
+    <ClInclude Include="src\drawable_objects\point.hpp">
+      <Filter>Drawable Objects\Point</Filter>
+    </ClInclude>
+    <ClInclude Include="src\drawable_objects\polygon.hpp">
+      <Filter>Drawable Objects\Polygon</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

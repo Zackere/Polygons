@@ -31,14 +31,12 @@ void SimpleLine::Display(DrawingBoard* board) {
 bool SimpleLine::OnMouseLButtonDown(
     DrawingBoard* board,
     DrawingBoard::CoordinatePair const& mouse_pos) {
-  if (mouse_pos.first == GetBegin().first &&
-      mouse_pos.second == GetBegin().second) {
+  if (mouse_pos == GetBegin()) {
     vertex_clicked_ = true;
     begin_clicked_ = true;
     line_clicked_ = false;
     last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
-  } else if (mouse_pos.first == GetEnd().first &&
-             mouse_pos.second == GetEnd().second) {
+  } else if (mouse_pos == GetEnd()) {
     vertex_clicked_ = true;
     begin_clicked_ = false;
     line_clicked_ = false;
@@ -48,7 +46,7 @@ bool SimpleLine::OnMouseLButtonDown(
     line_clicked_ = true;
     last_mouse_pos_.emplace(mouse_pos.first, mouse_pos.second);
   }
-  return false;
+  return vertex_clicked_ || line_clicked_;
 }
 
 bool SimpleLine::OnMouseLButtonUp(
@@ -63,9 +61,9 @@ bool SimpleLine::OnMouseMove(DrawingBoard* board,
                              DrawingBoard::CoordinatePair const& mouse_pos) {
   if (vertex_clicked_) {
     if (begin_clicked_)
-      SetBegin(DrawingBoard::CoordinatePair{mouse_pos.first, mouse_pos.second});
+      SetBegin(mouse_pos);
     else
-      SetEnd(DrawingBoard::CoordinatePair{mouse_pos.first, mouse_pos.second});
+      SetEnd(mouse_pos);
   } else if (line_clicked_) {
     MoveByVector({mouse_pos.first - last_mouse_pos_.value().first,
                   mouse_pos.second - last_mouse_pos_.value().second});

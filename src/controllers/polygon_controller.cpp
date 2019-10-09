@@ -3,9 +3,14 @@
 #include "polygon_controller.hpp"
 
 #include "../drawable_objects/point.hpp"
+#include "../drawable_objects/polygon.hpp"
 #include "../drawable_objects/simple_line.hpp"
 
 namespace gk {
+PolygonController::PolygonController() {
+  polygon_verticies_.reserve(2);
+}
+
 PolygonController::~PolygonController() = default;
 
 bool PolygonController::OnMouseLButtonDown(
@@ -22,12 +27,12 @@ bool PolygonController::OnMouseLButtonDown(
 bool PolygonController::OnMouseLButtonUp(
     DrawingBoard* board,
     DrawingBoard::CoordinatePair mouse_pos) {
-  bool ret = false;
   if (state_ == State::FREE) {
     for (auto& obj : objects_)
-      ret = obj->OnMouseLButtonUp(board, mouse_pos) || ret;
+      if (obj->OnMouseLButtonUp(board, mouse_pos))
+        return true;
   }
-  return ret;
+  return false;
 }
 
 bool PolygonController::OnMouseLButtonDoubleClick(
@@ -60,7 +65,16 @@ bool PolygonController::OnMouseLButtonDoubleClick(
         return false;
       }
     case gk::PolygonController::State::CREATE_POLYGON:
-      break;
+      if (polygon_verticies_.size() == 2) {
+        AddObject(std::make_unique<Polygon>(polygon_verticies_[0],
+                                            polygon_verticies_[1], mouse_pos,
+                                            RGB(0, 255, 0), RGB(255, 0, 0)));
+        polygon_verticies_.clear();
+        return true;
+      } else {
+        polygon_verticies_.emplace_back(mouse_pos);
+        return false;
+      }
     case gk::PolygonController::State::PURE_DESTRUCTION: {
       for (auto it = objects_.begin(); it != objects_.end();) {
         auto& object = *it;
@@ -109,7 +123,8 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
       break;
     case 'R':
       state_ = State::CREATE_POLYGON;
-      board->SetTitle(L"Polygon creation mode (not yet implemented)");
+      board->SetTitle(L"Polygon creation mode");
+      polygon_verticies_.clear();
       break;
     case 'T':
       state_ = State::CREATE_POINT;

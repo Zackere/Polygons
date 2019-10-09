@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <vector>
 
 #include "../drawable_objects/drawable_object.hpp"
 #include "../drawing_board.hpp"
@@ -16,6 +17,7 @@
 namespace gk {
 class PolygonController : public Controller {
  public:
+  PolygonController();
   // Overridden from Controller
   ~PolygonController() override;
   bool OnMouseLButtonDown(DrawingBoard* board,
@@ -45,5 +47,6 @@ class PolygonController : public Controller {
   } state_ = State::FREE;
 
   std::optional<DrawingBoard::CoordinatePair> last_click_;
+  std::vector<DrawingBoard::CoordinatePair> polygon_verticies_;
 };
 }  // namespace gk

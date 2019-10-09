@@ -14,6 +14,8 @@ class DrawableObject;
 class Controller {
  public:
   virtual ~Controller() = default;
+  // Return true if the screen needs to be updated
+  // (in any of the below methods).
   virtual bool OnMouseLButtonDown(DrawingBoard* board,
                                   DrawingBoard::CoordinatePair mouse_pos) = 0;
   virtual bool OnMouseLButtonUp(DrawingBoard* board,

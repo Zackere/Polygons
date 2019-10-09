@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="src\controllers\polygon_controller.cpp" />
     <ClCompile Include="src\drawable_objects\line.cpp" />
+    <ClCompile Include="src\drawable_objects\polygon.cpp" />
+    <ClCompile Include="src\drawable_objects\polygon_line.cpp" />
     <ClCompile Include="src\drawable_objects\simple_line.cpp" />
     <ClCompile Include="src\drawable_objects\point.cpp" />
     <ClCompile Include="src\drawing_board.cpp" />
@@ -31,6 +33,7 @@
     <ClInclude Include="src\controllers\polygon_controller.hpp" />
     <ClInclude Include="src\drawable_objects\drawable_object.hpp" />
     <ClInclude Include="src\drawable_objects\line.hpp" />
+    <ClInclude Include="src\drawable_objects\polygon_line.hpp" />
     <ClInclude Include="src\drawable_objects\simple_line.hpp" />
     <ClInclude Include="src\drawable_objects\point.hpp" />
     <ClInclude Include="src\drawable_objects\polygon.hpp" />

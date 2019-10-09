@@ -30,8 +30,8 @@ class Line : public DrawableObject {
                         DrawingBoard::CoordinatePair const& mouse_pos) = 0;
   bool OnMouseMove(DrawingBoard* board,
                    DrawingBoard::CoordinatePair const& mouse_pos) = 0;
-  bool Contains(DrawingBoard::CoordinatePair const& point);
-  bool IsVertex(DrawingBoard::CoordinatePair const& point);
+  bool Contains(DrawingBoard::CoordinatePair const& point) override;
+  bool IsVertex(DrawingBoard::CoordinatePair const& point) override;
   bool RequestRemoval(DrawingBoard::CoordinatePair const& point) = 0;
   bool AddVertex(DrawingBoard::CoordinatePair const& point,
                  Controller* controller) = 0;
