@@ -5,82 +5,42 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Drawable Objects">
-      <UniqueIdentifier>{371af0d4-fb30-49bd-9b4b-5cd41c7ba0ac}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Controllers">
-      <UniqueIdentifier>{98af9c75-1b04-4384-935c-653434a940b6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Drawing Board">
       <UniqueIdentifier>{e3d2ee61-bf6d-4e78-a28d-55b14ebb2b16}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Drawable Objects\Line">
-      <UniqueIdentifier>{8636da22-0aaf-4f62-ae34-d07cacdf288d}</UniqueIdentifier>
+    <Filter Include="Controller">
+      <UniqueIdentifier>{7c28deaf-fbf9-46dd-a09a-b294e5421837}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Drawable Objects\Polygon">
-      <UniqueIdentifier>{86cb544b-758f-4702-9d07-5696644904cd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Drawable Objects\Point">
-      <UniqueIdentifier>{5388eb96-2d7c-4efc-93bf-27ec9a0dfd0a}</UniqueIdentifier>
+    <Filter Include="Polygon">
+      <UniqueIdentifier>{62034807-7c2e-4d64-a1c7-338cbb104127}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gk1_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\controllers\polygon_controller.cpp">
-      <Filter>Controllers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\drawing_board.cpp">
+    <ClCompile Include="src\drawing_board\drawing_board.cpp">
       <Filter>Drawing Board</Filter>
     </ClCompile>
-    <ClCompile Include="src\drawable_objects\line.cpp">
-      <Filter>Drawable Objects\Line</Filter>
+    <ClCompile Include="src\controller\polygon_controller.cpp">
+      <Filter>Controller</Filter>
     </ClCompile>
-    <ClCompile Include="src\drawable_objects\simple_line.cpp">
-      <Filter>Drawable Objects\Line</Filter>
-    </ClCompile>
-    <ClCompile Include="src\drawable_objects\polygon_line.cpp">
-      <Filter>Drawable Objects\Polygon</Filter>
-    </ClCompile>
-    <ClCompile Include="src\drawable_objects\polygon.cpp">
-      <Filter>Drawable Objects\Polygon</Filter>
-    </ClCompile>
-    <ClCompile Include="src\drawable_objects\point.cpp">
-      <Filter>Drawable Objects\Point</Filter>
+    <ClCompile Include="src\polygon\polygon.cpp">
+      <Filter>Polygon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\controllers\controller.hpp">
-      <Filter>Controllers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\controllers\polygon_controller.hpp">
-      <Filter>Controllers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\drawing_board.hpp">
+    <ClInclude Include="src\drawing_board\drawing_board.hpp">
       <Filter>Drawing Board</Filter>
     </ClInclude>
-    <ClInclude Include="src\drawable_objects\drawable_object.hpp">
-      <Filter>Drawable Objects</Filter>
+    <ClInclude Include="src\controller\controller.hpp">
+      <Filter>Controller</Filter>
     </ClInclude>
-    <ClInclude Include="src\drawable_objects\line.hpp">
-      <Filter>Drawable Objects\Line</Filter>
+    <ClInclude Include="src\controller\polygon_controller.hpp">
+      <Filter>Controller</Filter>
     </ClInclude>
-    <ClInclude Include="src\drawable_objects\simple_line.hpp">
-      <Filter>Drawable Objects\Line</Filter>
-    </ClInclude>
-    <ClInclude Include="src\drawable_objects\polygon_line.hpp">
-      <Filter>Drawable Objects\Polygon</Filter>
-    </ClInclude>
-    <ClInclude Include="src\drawable_objects\point.hpp">
-      <Filter>Drawable Objects\Point</Filter>
-    </ClInclude>
-    <ClInclude Include="src\drawable_objects\polygon.hpp">
-      <Filter>Drawable Objects\Polygon</Filter>
+    <ClInclude Include="src\polygon\polygon.hpp">
+      <Filter>Polygon</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

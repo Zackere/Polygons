@@ -2,8 +2,8 @@
 
 #include <Windows.h>
 
-#include "controllers/polygon_controller.hpp"
-#include "drawing_board.hpp"
+#include "./controller/polygon_controller.hpp"
+#include "./drawing_board/drawing_board.hpp"
 
 namespace {
 void RunMessageLoop() {

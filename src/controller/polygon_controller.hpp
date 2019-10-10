@@ -4,17 +4,18 @@
 
 #include <Windows.h>
 
-#include <list>
+#include <set>
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
 
-#include "../drawable_objects/drawable_object.hpp"
-#include "../drawing_board.hpp"
-#include "controller.hpp"
+#include "../drawing_board/drawing_board.hpp"
+#include "../controller/controller.hpp"
 
 namespace gk {
+class Polygon;
+
 class PolygonController : public Controller {
  public:
   PolygonController();
@@ -32,15 +33,12 @@ class PolygonController : public Controller {
   bool OnKeyDown(DrawingBoard* board, WPARAM key_code, bool was_down) override;
   bool OnKeyUp(DrawingBoard* board, WPARAM key_code) override;
   void Draw(DrawingBoard* board) override;
-  void AddObject(std::unique_ptr<DrawableObject> object) override;
 
  private:
-  std::list<std::unique_ptr<DrawableObject>> objects_;
+  std::set<std::unique_ptr<Polygon>> polygons_;
   enum class State {
     FREE,
-    CREATE_POINT,
     CREATE_VERTEX,
-    CREATE_LINE,
     CREATE_POLYGON,
     PURE_DESTRUCTION,
     TOTAL_STATES

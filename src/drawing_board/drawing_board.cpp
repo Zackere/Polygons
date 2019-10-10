@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 
-#include "controllers/controller.hpp"
+#include "../controller/controller.hpp"
 
 namespace gk {
 namespace {
@@ -23,6 +23,13 @@ std::wstring GetErrorCodeString(const int error_code) {
   const std::wstring message(message_buffer, size);
   LocalFree(message_buffer);
   return message;
+}
+
+POINT GetCursorPosInWindow(HWND hWnd) {
+  POINT p;
+  GetCursorPos(&p);
+  ScreenToClient(hWnd, &p);
+  return p;
 }
 }  // namespace
 
@@ -53,6 +60,7 @@ DrawingBoard::DrawingBoard(Size posx,
       drawing_board_height_(height),
       hdc_mem_(NULL),
       off_screen_bitmap_(NULL),
+      last_mouse_pos_({0, 0}),
       controller_(std::move(controller)) {
   if (!(width > 0 && height > 0 && pixel_size > 0)) {
     ShowError(L"One of parameters is incorrect. (gk::DrawingBoard constructor)",
@@ -78,6 +86,8 @@ DrawingBoard::DrawingBoard(Size posx,
   }
   SetWindowLongPtr(window_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   window_hdc_ = GetDC(window_);
+  POINT mouse_pos = GetCursorPosInWindow(window_);
+  last_mouse_pos_ = {mouse_pos.x, mouse_pos.y};
 
   hdc_mem_ = CreateCompatibleDC(window_hdc_);
   off_screen_bitmap_ = CreateCompatibleBitmap(window_hdc_, width, height);
@@ -148,11 +158,10 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
   auto* window =
       reinterpret_cast<DrawingBoard*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
   switch (message) {
-    case WM_PAINT: {
+    case WM_PAINT:
       if (window)
         window->Display();
       return 0;
-    }
     case WM_KEYDOWN:
       if (window)
         window->OnKeyDown(wParam, (lParam >> 30) & 1);
@@ -169,7 +178,6 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
         pos.second /= window->GetPixelSize();
         window->OnMouseLButtonDoubleClick(pos);
       }
-
       return 0;
     case WM_LBUTTONDOWN:
       if (window) {
@@ -196,9 +204,9 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
         pos.first /= window->GetPixelSize();
         pos.second /= window->GetPixelSize();
         window->OnMouseMove(pos);
+        window->last_mouse_pos_ = pos;
       }
       return 0;
-
     case WM_ERASEBKGND:
       return 1;
     case WM_DESTROY:

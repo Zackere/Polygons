@@ -19,25 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\controllers\polygon_controller.cpp" />
-    <ClCompile Include="src\drawable_objects\line.cpp" />
-    <ClCompile Include="src\drawable_objects\polygon.cpp" />
-    <ClCompile Include="src\drawable_objects\polygon_line.cpp" />
-    <ClCompile Include="src\drawable_objects\simple_line.cpp" />
-    <ClCompile Include="src\drawable_objects\point.cpp" />
-    <ClCompile Include="src\drawing_board.cpp" />
+    <ClCompile Include="src\controller\polygon_controller.cpp" />
+    <ClCompile Include="src\drawing_board\drawing_board.cpp" />
     <ClCompile Include="src\gk1_main.cpp" />
+    <ClCompile Include="src\polygon\polygon.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\controllers\controller.hpp" />
-    <ClInclude Include="src\controllers\polygon_controller.hpp" />
-    <ClInclude Include="src\drawable_objects\drawable_object.hpp" />
-    <ClInclude Include="src\drawable_objects\line.hpp" />
-    <ClInclude Include="src\drawable_objects\polygon_line.hpp" />
-    <ClInclude Include="src\drawable_objects\simple_line.hpp" />
-    <ClInclude Include="src\drawable_objects\point.hpp" />
-    <ClInclude Include="src\drawable_objects\polygon.hpp" />
-    <ClInclude Include="src\drawing_board.hpp" />
+    <ClInclude Include="src\controller\controller.hpp" />
+    <ClInclude Include="src\controller\polygon_controller.hpp" />
+    <ClInclude Include="src\drawing_board\drawing_board.hpp" />
+    <ClInclude Include="src\polygon\polygon.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

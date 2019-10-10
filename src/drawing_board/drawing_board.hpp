@@ -44,6 +44,7 @@ class DrawingBoard {
                COLORREF color);
   void ShowError(std::wstring error_message, bool fatal);
   void SetTitle(std::wstring new_title);
+  CoordinatePair GetPreviousMousePos() { return last_mouse_pos_; };
 
  private:
   static LRESULT CALLBACK WndProc(HWND hWnd,
@@ -66,6 +67,8 @@ class DrawingBoard {
 
   HDC hdc_mem_;
   HBITMAP off_screen_bitmap_;
+
+  CoordinatePair last_mouse_pos_;
 
   std::unique_ptr<Controller> controller_;
 
