@@ -77,7 +77,10 @@ bool Polygon::OnMouseLButtonUp(DrawingBoard* drawing_board,
 }
 
 bool Polygon::OnMouseMove(DrawingBoard* drawing_board,
-                          DrawingBoard::Point2d const& mouse_pos) {
+                          DrawingBoard::Point2d const& mouse_pos,
+                          bool move_whole) {
+  if (move_whole)
+    return body_->MoveWhole(mouse_pos, drawing_board->GetPreviousMousePos());
   auto* ptr = body_.get();
   bool ret = false;
   while ((ptr = ptr->Next()) != body_.get())
@@ -245,7 +248,7 @@ bool Polygon::PolygonEdge::OnMouseMove(
     DrawingBoard::Point2d const& prev_mouse_pos) {
   if (is_clicked_) {
     if (mouse_pos == prev_mouse_pos)
-      return false;
+      return true;
     const DrawingBoard::Point2d vector = mouse_pos - prev_mouse_pos;
     if (begin_clicked_) {
       SetBegin(begin_ + vector);
@@ -261,6 +264,27 @@ bool Polygon::PolygonEdge::OnMouseMove(
     }
     return true;
   }
+  return false;
+}
+
+bool Polygon::PolygonEdge::MoveWhole(
+    DrawingBoard::Point2d const& mouse_pos,
+    DrawingBoard::Point2d const& prev_mouse_pos) {
+  bool is_clicked = false;
+  auto* ptr = this;
+  do {
+    if (ptr->is_clicked_) {
+      if (mouse_pos == prev_mouse_pos)
+        return true;
+      const DrawingBoard::Point2d vector = mouse_pos - prev_mouse_pos;
+      ptr = this;
+      do {
+        ptr->begin_ = ptr->begin_ + vector;
+        ptr->end_ = ptr->end_ + vector;
+      } while ((ptr = ptr->Next()) != this);
+      return true;
+    }
+  } while ((ptr = ptr->Next()) != this);
   return false;
 }
 

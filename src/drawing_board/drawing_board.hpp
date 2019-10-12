@@ -64,7 +64,10 @@ class DrawingBoard {
                COLORREF color);
   void ShowError(std::wstring error_message, bool fatal);
   void SetTitle(std::wstring new_title);
-  Point2d GetPreviousMousePos() { return last_mouse_pos_; }
+  Point2d const& GetPreviousMousePos() const { return last_mouse_pos_; }
+  bool GetKeyState(int key_id) const {
+    return GetAsyncKeyState(key_id) & 1 << (sizeof(SHORT) * 8 - 1);
+  };
 
  private:
   static LRESULT CALLBACK WndProc(HWND hWnd,

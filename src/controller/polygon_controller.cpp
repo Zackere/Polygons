@@ -71,7 +71,8 @@ bool PolygonController::OnMouseMove(DrawingBoard* board,
                                     DrawingBoard::Point2d mouse_pos) {
   if (state_ == State::FREE) {
     for (auto& polygon : polygons_)
-      if (polygon->OnMouseMove(board, mouse_pos))
+      if (polygon->OnMouseMove(board, mouse_pos,
+                               board->GetKeyState(VK_CONTROL)))
         return true;
   }
   return false;

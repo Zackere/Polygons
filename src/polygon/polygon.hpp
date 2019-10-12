@@ -25,7 +25,8 @@ class Polygon {
   bool OnMouseLButtonUp(DrawingBoard* drawing_board,
                         DrawingBoard::Point2d const& mouse_pos);
   bool OnMouseMove(DrawingBoard* drawing_board,
-                   DrawingBoard::Point2d const& mouse_pos);
+                   DrawingBoard::Point2d const& mouse_pos,
+                   bool move_whole);
   void OnControllerStateChanged(PolygonController* controller);
   bool AddVertex(DrawingBoard::Point2d const& pos);
   bool Remove(DrawingBoard::Point2d const& point);
@@ -47,6 +48,8 @@ class Polygon {
     bool OnMouseLButtonUp(DrawingBoard::Point2d const& mouse_pos);
     bool OnMouseMove(DrawingBoard::Point2d const& mouse_pos,
                      DrawingBoard::Point2d const& prev_mouse_pos);
+    bool MoveWhole(DrawingBoard::Point2d const& mouse_pos,
+                   DrawingBoard::Point2d const& prev_mouse_pos);
     void OnControllerStateChanged(PolygonController* controller);
     bool Split(DrawingBoard::Point2d const& mouse_pos);
     bool Remove(DrawingBoard::Point2d const& point, PolygonEdge** head);
