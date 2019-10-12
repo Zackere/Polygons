@@ -4,6 +4,7 @@
 
 #include <Windows.h>
 
+#include <complex>
 #include <memory>
 #include <string_view>
 #include <utility>
@@ -15,7 +16,26 @@ class DrawingBoard {
  public:
   using Size = int;
   using Coordinate = int;
-  using CoordinatePair = std::pair<Coordinate, Coordinate>;
+  struct Point2d {
+    Coordinate x;
+    Coordinate y;
+    Point2d(Coordinate x, Coordinate y) : x(x), y(y) {}
+    bool operator==(Point2d const& p) const { return x == p.x && y == p.y; }
+    Point2d operator-(Point2d const& p) const { return {x - p.x, y - p.y}; }
+    Point2d operator+(Point2d const& p) const { return {x + p.x, y + p.y}; }
+    Point2d operator/(Coordinate c) const { return {x / c, y / c}; }
+    Point2d operator*(Coordinate c) const { return {x * c, y * c}; }
+    Point2d operator*(Point2d const& p) const {
+      auto ret = std::complex<double>(x, y) * std::complex<double>(p.x, p.y);
+      return {static_cast<Coordinate>(ret.real()),
+              static_cast<Coordinate>(ret.imag())};
+    }
+    Point2d operator/(Point2d const& p) const {
+      auto ret = std::complex<double>(x, y) / std::complex<double>(p.x, p.y);
+      return {static_cast<Coordinate>(ret.real()),
+              static_cast<Coordinate>(ret.imag())};
+    }
+  };
 
   static bool RegisterWindowClass(HINSTANCE hInstance);
   DrawingBoard(Size posx,
@@ -44,17 +64,17 @@ class DrawingBoard {
                COLORREF color);
   void ShowError(std::wstring error_message, bool fatal);
   void SetTitle(std::wstring new_title);
-  CoordinatePair GetPreviousMousePos() { return last_mouse_pos_; };
+  Point2d GetPreviousMousePos() { return last_mouse_pos_; }
 
  private:
   static LRESULT CALLBACK WndProc(HWND hWnd,
                                   UINT message,
                                   WPARAM wParam,
                                   LPARAM lParam);
-  void OnMouseLButtonDown(CoordinatePair mouse_pos);
-  void OnMouseLButtonUp(CoordinatePair mouse_pos);
-  void OnMouseLButtonDoubleClick(CoordinatePair mouse_pos);
-  void OnMouseMove(CoordinatePair mouse_pos);
+  void OnMouseLButtonDown(Point2d const& mouse_pos);
+  void OnMouseLButtonUp(Point2d const& mouse_pos);
+  void OnMouseLButtonDoubleClick(Point2d const& mouse_pos);
+  void OnMouseMove(Point2d const& mouse_pos);
   void OnKeyDown(WPARAM key_code, bool was_down);
   void OnKeyUp(WPARAM key_code);
 
@@ -68,7 +88,7 @@ class DrawingBoard {
   HDC hdc_mem_;
   HBITMAP off_screen_bitmap_;
 
-  CoordinatePair last_mouse_pos_;
+  Point2d last_mouse_pos_;
 
   std::unique_ptr<Controller> controller_;
 

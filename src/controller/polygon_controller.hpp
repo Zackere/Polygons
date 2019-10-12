@@ -4,14 +4,14 @@
 
 #include <Windows.h>
 
-#include <set>
 #include <memory>
 #include <optional>
+#include <set>
 #include <utility>
 #include <vector>
 
-#include "../drawing_board/drawing_board.hpp"
 #include "../controller/controller.hpp"
+#include "../drawing_board/drawing_board.hpp"
 
 namespace gk {
 class Polygon;
@@ -22,14 +22,13 @@ class PolygonController : public Controller {
   // Overridden from Controller
   ~PolygonController() override;
   bool OnMouseLButtonDown(DrawingBoard* board,
-                          DrawingBoard::CoordinatePair mouse_pos) override;
+                          DrawingBoard::Point2d mouse_pos) override;
   bool OnMouseLButtonUp(DrawingBoard* board,
-                        DrawingBoard::CoordinatePair mouse_pos) override;
-  bool OnMouseLButtonDoubleClick(
-      DrawingBoard* board,
-      DrawingBoard::CoordinatePair mouse_pos) override;
+                        DrawingBoard::Point2d mouse_pos) override;
+  bool OnMouseLButtonDoubleClick(DrawingBoard* board,
+                                 DrawingBoard::Point2d mouse_pos) override;
   bool OnMouseMove(DrawingBoard* board,
-                   DrawingBoard::CoordinatePair mouse_pos) override;
+                   DrawingBoard::Point2d mouse_pos) override;
   bool OnKeyDown(DrawingBoard* board, WPARAM key_code, bool was_down) override;
   bool OnKeyUp(DrawingBoard* board, WPARAM key_code) override;
   void Draw(DrawingBoard* board) override;
@@ -44,7 +43,7 @@ class PolygonController : public Controller {
     TOTAL_STATES
   } state_ = State::FREE;
 
-  std::optional<DrawingBoard::CoordinatePair> last_click_;
-  std::vector<DrawingBoard::CoordinatePair> polygon_verticies_;
+  std::optional<DrawingBoard::Point2d> last_click_;
+  std::vector<DrawingBoard::Point2d> polygon_verticies_;
 };
 }  // namespace gk

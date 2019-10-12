@@ -21,7 +21,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
                     int nCmdShow) {
   // Please, change these.
   constexpr gk::DrawingBoard::Size kPosx = 0, kPosy = 0;
-  constexpr gk::DrawingBoard::Size kPixelSize = 4;
+  constexpr gk::DrawingBoard::Size kPixelSize = 2;
   constexpr gk::DrawingBoard::Size kWidth = 1600;
   constexpr gk::DrawingBoard::Size kHeight = 800;
 

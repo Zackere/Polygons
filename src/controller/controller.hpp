@@ -15,14 +15,13 @@ class Controller {
   // Return true if the screen needs to be updated
   // (in any of the below methods).
   virtual bool OnMouseLButtonDown(DrawingBoard* board,
-                                  DrawingBoard::CoordinatePair mouse_pos) = 0;
+                                  DrawingBoard::Point2d mouse_pos) = 0;
   virtual bool OnMouseLButtonUp(DrawingBoard* board,
-                                DrawingBoard::CoordinatePair mouse_pos) = 0;
-  virtual bool OnMouseLButtonDoubleClick(
-      DrawingBoard* board,
-      DrawingBoard::CoordinatePair mouse_pos) = 0;
+                                DrawingBoard::Point2d mouse_pos) = 0;
+  virtual bool OnMouseLButtonDoubleClick(DrawingBoard* board,
+                                         DrawingBoard::Point2d mouse_pos) = 0;
   virtual bool OnMouseMove(DrawingBoard* board,
-                           DrawingBoard::CoordinatePair mouse_pos) = 0;
+                           DrawingBoard::Point2d mouse_pos) = 0;
   virtual bool OnKeyDown(DrawingBoard* board,
                          WPARAM key_code,
                          bool was_down) = 0;

@@ -13,9 +13,8 @@ PolygonController::PolygonController() {
 
 PolygonController::~PolygonController() = default;
 
-bool PolygonController::OnMouseLButtonDown(
-    DrawingBoard* board,
-    DrawingBoard::CoordinatePair mouse_pos) {
+bool PolygonController::OnMouseLButtonDown(DrawingBoard* board,
+                                           DrawingBoard::Point2d mouse_pos) {
   if (state_ == State::FREE) {
     for (auto& polygon : polygons_)
       if (polygon->OnMouseLButtonDown(board, mouse_pos))
@@ -24,9 +23,8 @@ bool PolygonController::OnMouseLButtonDown(
   return false;
 }
 
-bool PolygonController::OnMouseLButtonUp(
-    DrawingBoard* board,
-    DrawingBoard::CoordinatePair mouse_pos) {
+bool PolygonController::OnMouseLButtonUp(DrawingBoard* board,
+                                         DrawingBoard::Point2d mouse_pos) {
   if (state_ == State::FREE) {
     for (auto& polygon : polygons_)
       if (polygon->OnMouseLButtonUp(board, mouse_pos))
@@ -37,11 +35,11 @@ bool PolygonController::OnMouseLButtonUp(
 
 bool PolygonController::OnMouseLButtonDoubleClick(
     DrawingBoard* board,
-    DrawingBoard::CoordinatePair mouse_pos) {
+    DrawingBoard::Point2d mouse_pos) {
   switch (state_) {
     case State::CREATE_VERTEX:
-      for (auto it = polygons_.begin(); it != polygons_.end(); ++it)
-        if ((*it)->AddVertex(mouse_pos))
+      for (auto& polygon : polygons_)
+        if (polygon->AddVertex(mouse_pos))
           return true;
       return false;
     case State::CREATE_POLYGON:
@@ -55,7 +53,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(
         polygon_verticies_.emplace_back(mouse_pos);
         return false;
       }
-    case gk::PolygonController::State::PURE_DESTRUCTION: {
+    case State::PURE_DESTRUCTION: {
       for (auto it = polygons_.begin(); it != polygons_.end();) {
         auto& polygon = *it;
         if (!polygon->Remove(mouse_pos))
@@ -70,7 +68,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(
 }
 
 bool PolygonController::OnMouseMove(DrawingBoard* board,
-                                    DrawingBoard::CoordinatePair mouse_pos) {
+                                    DrawingBoard::Point2d mouse_pos) {
   if (state_ == State::FREE) {
     for (auto& polygon : polygons_)
       if (polygon->OnMouseMove(board, mouse_pos))
@@ -102,7 +100,7 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
       polygon_verticies_.clear();
       break;
     case 'D':
-      state_ = gk::PolygonController::State::PURE_DESTRUCTION;
+      state_ = State::PURE_DESTRUCTION;
       board->SetTitle(L"Object deletion mode");
       break;
   }

@@ -1,3 +1,5 @@
+// Copyright Wojciech Replin 2019
+
 #include "polygon.hpp"
 
 #undef min
@@ -10,51 +12,42 @@ namespace {
 constexpr double kMinDistanceFromVertexSquared = 6;
 constexpr double kMinDistanceFromEdgeSquared = 6;
 
-float DistanceSquared(DrawingBoard::CoordinatePair const& from,
-                      DrawingBoard::CoordinatePair const& to) {
-  return static_cast<float>(from.first - to.first) * (from.first - to.first) +
-         static_cast<float>(from.second - to.second) *
-             (from.second - to.second);
+float DistanceSquared(DrawingBoard::Point2d const& from,
+                      DrawingBoard::Point2d const& to) {
+  return static_cast<float>(from.x - to.x) * (from.x - to.x) +
+         static_cast<float>(from.y - to.y) * (from.y - to.y);
 }
 
-float DotProduct(DrawingBoard::CoordinatePair const& a,
-                 DrawingBoard::CoordinatePair const& b) {
-  return static_cast<float>(a.first) * b.first +
-         static_cast<float>(a.second) * b.second;
+float DotProduct(DrawingBoard::Point2d const& a,
+                 DrawingBoard::Point2d const& b) {
+  return static_cast<float>(a.x) * b.x + static_cast<float>(a.y) * b.y;
 }
 
-float DistanceToSegmentSquared(DrawingBoard::CoordinatePair const& s1,
-                               DrawingBoard::CoordinatePair const& s2,
-                               DrawingBoard::CoordinatePair const& p) {
+float DistanceToSegmentSquared(DrawingBoard::Point2d const& s1,
+                               DrawingBoard::Point2d const& s2,
+                               DrawingBoard::Point2d const& p) {
   if (s1 == s2)
     return DistanceSquared(s1, p);
   const float dist_sq = DistanceSquared(s1, s2);
-  const float t = std::max(
-      0.f,
-      std::min(1.f, DotProduct({p.first - s1.first, p.second - s1.second},
-                               {s2.first - s1.first, s2.second - s1.second}) /
-                        dist_sq));
-  const DrawingBoard::CoordinatePair projection(
-      static_cast<int>(s1.first +
-                         t * (static_cast<float>(s2.first) - s1.first)),
-      static_cast<int>(s1.second +
-                         t * (static_cast<float>(s2.second) - s1.second)));
+  const float t =
+      std::max(0.f, std::min(1.f, DotProduct({p.x - s1.x, p.y - s1.y},
+                                             {s2.x - s1.x, s2.y - s1.y}) /
+                                      dist_sq));
+  const DrawingBoard::Point2d projection(
+      static_cast<int>(s1.x + t * (static_cast<float>(s2.x) - s1.x)),
+      static_cast<int>(s1.y + t * (static_cast<float>(s2.y) - s1.y)));
   return DistanceSquared(p, projection);
 }
 }  // namespace
-std::unique_ptr<Polygon> Polygon::Create(DrawingBoard::CoordinatePair const& p1,
-                                         DrawingBoard::CoordinatePair const& p2,
-                                         DrawingBoard::CoordinatePair const& p3,
+std::unique_ptr<Polygon> Polygon::Create(DrawingBoard::Point2d const& p1,
+                                         DrawingBoard::Point2d const& p2,
+                                         DrawingBoard::Point2d const& p3,
                                          COLORREF edge_color,
                                          COLORREF vertex_color) {
-  std::shared_ptr<DrawingBoard::CoordinatePair> v1, v2, v3;
-  v1 = std::make_shared<DrawingBoard::CoordinatePair>(p1);
-  v2 = std::make_shared<DrawingBoard::CoordinatePair>(p2);
-  v3 = std::make_shared<DrawingBoard::CoordinatePair>(p3);
   auto ret = std::make_unique<Polygon>();
-  ret->body_ = std::make_unique<PolygonEdge>(v1, v2, edge_color, vertex_color);
-  ret->body_->AddAfter(new PolygonEdge(v2, v3, edge_color, vertex_color));
-  ret->body_->AddBefore(new PolygonEdge(v3, v1, edge_color, vertex_color));
+  ret->body_ = std::make_unique<PolygonEdge>(p1, p2, edge_color, vertex_color);
+  ret->body_->AddAfter(new PolygonEdge(p2, p3, edge_color, vertex_color));
+  ret->body_->AddBefore(new PolygonEdge(p3, p1, edge_color, vertex_color));
   return ret;
 }
 
@@ -65,9 +58,8 @@ void Polygon::Display(DrawingBoard* drawing_board) {
   ptr->Display(drawing_board);
 }
 
-bool Polygon::OnMouseLButtonDown(
-    DrawingBoard* drawing_board,
-    DrawingBoard::CoordinatePair const& mouse_pos) {
+bool Polygon::OnMouseLButtonDown(DrawingBoard* drawing_board,
+                                 DrawingBoard::Point2d const& mouse_pos) {
   auto* ptr = body_.get();
   bool ret = false;
   while ((ptr = ptr->Next()) != body_.get())
@@ -76,7 +68,7 @@ bool Polygon::OnMouseLButtonDown(
 }
 
 bool Polygon::OnMouseLButtonUp(DrawingBoard* drawing_board,
-                               DrawingBoard::CoordinatePair const& mouse_pos) {
+                               DrawingBoard::Point2d const& mouse_pos) {
   auto* ptr = body_.get();
   bool ret = false;
   while ((ptr = ptr->Next()) != body_.get())
@@ -85,7 +77,7 @@ bool Polygon::OnMouseLButtonUp(DrawingBoard* drawing_board,
 }
 
 bool Polygon::OnMouseMove(DrawingBoard* drawing_board,
-                          DrawingBoard::CoordinatePair const& mouse_pos) {
+                          DrawingBoard::Point2d const& mouse_pos) {
   auto* ptr = body_.get();
   bool ret = false;
   while ((ptr = ptr->Next()) != body_.get())
@@ -101,7 +93,7 @@ void Polygon::OnControllerStateChanged(PolygonController* controller) {
   return body_->OnControllerStateChanged(controller);
 }
 
-bool Polygon::AddVertex(DrawingBoard::CoordinatePair const& pos) {
+bool Polygon::AddVertex(DrawingBoard::Point2d const& pos) {
   auto* ptr = body_.get();
   while ((ptr = ptr->Next()) != body_.get())
     if (ptr->Split(pos))
@@ -109,23 +101,24 @@ bool Polygon::AddVertex(DrawingBoard::CoordinatePair const& pos) {
   return body_->Split(pos);
 }
 
-bool Polygon::Remove(DrawingBoard::CoordinatePair const& point) {
-  if (body_->Next()->Next()->Next() == body_.get())
-    return false;
+bool Polygon::Remove(DrawingBoard::Point2d const& point) {
   auto* ptr = body_.get();
   auto* head = body_.get();
   while ((ptr = ptr->Next()) != body_.get())
     if (ptr->Remove(point, &head)) {
       body_.release();
       body_.reset(head);
+      if (body_->Next()->Next() == body_.get())
+        return false;
       return true;
     }
   if (body_->Remove(point, &head)) {
     body_.release();
     body_.reset(head);
-    return true;
+    if (body_->Next()->Next() == body_.get())
+      return false;
   }
-  return false;
+  return true;
 }
 
 Polygon::PolygonEdge::~PolygonEdge() {
@@ -135,11 +128,10 @@ Polygon::PolygonEdge::~PolygonEdge() {
   }
 }
 
-Polygon::PolygonEdge::PolygonEdge(
-    std::shared_ptr<DrawingBoard::CoordinatePair> begin,
-    std::shared_ptr<DrawingBoard::CoordinatePair> end,
-    COLORREF edge_color,
-    COLORREF vertex_color)
+Polygon::PolygonEdge::PolygonEdge(DrawingBoard::Point2d const& begin,
+                                  DrawingBoard::Point2d const& end,
+                                  COLORREF edge_color,
+                                  COLORREF vertex_color)
     : begin_(begin),
       end_(end),
       next_(this),
@@ -149,21 +141,21 @@ Polygon::PolygonEdge::PolygonEdge(
 
 void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
   DrawingBoard::Coordinate x, y, i, xe, ye;
-  DrawingBoard::Coordinate dx = end_->first - begin_->first;
-  DrawingBoard::Coordinate dy = end_->second - begin_->second;
+  DrawingBoard::Coordinate dx = end_.x - begin_.x;
+  DrawingBoard::Coordinate dy = end_.y - begin_.y;
   DrawingBoard::Coordinate dx1 = std::abs(dx);
   DrawingBoard::Coordinate dy1 = std::abs(dy);
   DrawingBoard::Coordinate px = 2 * dy1 - dx1;
   DrawingBoard::Coordinate py = 2 * dx1 - dy1;
   if (dy1 <= dx1) {
     if (dx >= 0) {
-      x = begin_->first;
-      y = begin_->second;
-      xe = end_->first;
+      x = begin_.x;
+      y = begin_.y;
+      xe = end_.x;
     } else {
-      x = end_->first;
-      y = end_->second;
-      xe = begin_->first;
+      x = end_.x;
+      y = end_.y;
+      xe = begin_.x;
     }
     drawing_board->SetPixel(x, y, edge_color_);
     for (i = 0; x < xe; ++i) {
@@ -181,13 +173,13 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
     }
   } else {
     if (dy >= 0) {
-      x = begin_->first;
-      y = begin_->second;
-      ye = end_->second;
+      x = begin_.x;
+      y = begin_.y;
+      ye = end_.y;
     } else {
-      x = end_->first;
-      y = end_->second;
-      ye = begin_->second;
+      x = end_.x;
+      y = end_.y;
+      ye = begin_.y;
     }
     drawing_board->SetPixel(x, y, edge_color_);
     for (i = 0; y < ye; ++i) {
@@ -204,8 +196,8 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
       drawing_board->SetPixel(x, y, edge_color_);
     }
   }
-  drawing_board->SetPixel(begin_->first, begin_->second, vertex_color_);
-  drawing_board->SetPixel(end_->first, end_->second, vertex_color_);
+  drawing_board->SetPixel(begin_.x, begin_.y, vertex_color_);
+  drawing_board->SetPixel(end_.x, end_.y, vertex_color_);
 }
 
 void Polygon::PolygonEdge::AddAfter(PolygonEdge* edge) {
@@ -222,19 +214,18 @@ void Polygon::PolygonEdge::AddBefore(PolygonEdge* edge) {
   prev_ = edge;
 }
 bool Polygon::PolygonEdge::OnMouseLButtonDown(
-    DrawingBoard::CoordinatePair const& mouse_pos) {
-  if (DistanceSquared(mouse_pos, *begin_) < kMinDistanceFromVertexSquared) {
+    DrawingBoard::Point2d const& mouse_pos) {
+  if (DistanceSquared(mouse_pos, begin_) < kMinDistanceFromVertexSquared) {
     begin_clicked_ = true;
     is_clicked_ = true;
     is_edge_clicked_ = false;
     return true;
-  } else if (DistanceSquared(mouse_pos, *end_) <
-             kMinDistanceFromVertexSquared) {
+  } else if (DistanceSquared(mouse_pos, end_) < kMinDistanceFromVertexSquared) {
     begin_clicked_ = false;
     is_clicked_ = true;
     is_edge_clicked_ = false;
     return true;
-  } else if (DistanceToSegmentSquared(*begin_, *end_, mouse_pos) <
+  } else if (DistanceToSegmentSquared(begin_, end_, mouse_pos) <
              kMinDistanceFromEdgeSquared) {
     begin_clicked_ = false;
     is_clicked_ = true;
@@ -244,27 +235,29 @@ bool Polygon::PolygonEdge::OnMouseLButtonDown(
 }
 
 bool Polygon::PolygonEdge::OnMouseLButtonUp(
-    DrawingBoard::CoordinatePair const& mouse_pos) {
+    DrawingBoard::Point2d const& mouse_pos) {
   is_edge_clicked_ = is_clicked_ = begin_clicked_ = false;
   return false;
 }
 
 bool Polygon::PolygonEdge::OnMouseMove(
-    DrawingBoard::CoordinatePair const& mouse_pos,
-    DrawingBoard::CoordinatePair const& prev_mouse_pos) {
+    DrawingBoard::Point2d const& mouse_pos,
+    DrawingBoard::Point2d const& prev_mouse_pos) {
   if (is_clicked_) {
-    const DrawingBoard::CoordinatePair vector = {
-        mouse_pos.first - prev_mouse_pos.first,
-        mouse_pos.second - prev_mouse_pos.second};
-    if (vector == DrawingBoard::CoordinatePair{0, 0})
+    if (mouse_pos == prev_mouse_pos)
       return false;
+    const DrawingBoard::Point2d vector = mouse_pos - prev_mouse_pos;
     if (begin_clicked_) {
-      *begin_ = {begin_->first + vector.first, begin_->second + vector.second};
+      SetBegin(begin_ + vector);
+      prev_->SetEnd(begin_);
     } else if (!is_edge_clicked_) {
-      *end_ = {end_->first + vector.first, end_->second + vector.second};
+      SetEnd(end_ + vector);
+      next_->SetBegin(end_);
     } else if (is_edge_clicked_) {
-      *begin_ = {begin_->first + vector.first, begin_->second + vector.second};
-      *end_ = {end_->first + vector.first, end_->second + vector.second};
+      SetBegin(begin_ + vector);
+      SetEnd(end_ + vector);
+      prev_->SetEnd(begin_);
+      next_->SetBegin(end_);
     }
     return true;
   }
@@ -276,35 +269,28 @@ void Polygon::PolygonEdge::OnControllerStateChanged(
   is_edge_clicked_ = is_clicked_ = begin_clicked_ = false;
 }
 
-bool Polygon::PolygonEdge::Split(
-    DrawingBoard::CoordinatePair const& mouse_pos) {
-  if (DistanceToSegmentSquared(*begin_, *end_, mouse_pos) <
+bool Polygon::PolygonEdge::Split(DrawingBoard::Point2d const& mouse_pos) {
+  if (DistanceToSegmentSquared(begin_, end_, mouse_pos) <
       kMinDistanceFromEdgeSquared) {
-    DrawingBoard::CoordinatePair mid = {begin_->first + end_->first,
-                                        begin_->second + end_->second};
-    mid = {mid.first / 2, mid.second / 2};
-    auto mid_ptr = std::make_shared<DrawingBoard::CoordinatePair>(mid);
-    auto* new_edge = new PolygonEdge(mid_ptr, end_, edge_color_, vertex_color_);
+    DrawingBoard::Point2d mid = {begin_.x + end_.x, begin_.y + end_.y};
+    mid = {mid.x / 2, mid.y / 2};
+    auto* new_edge = new PolygonEdge(mid, end_, edge_color_, vertex_color_);
     new_edge->next_ = next_;
     next_->prev_ = new_edge;
     next_ = new_edge;
     new_edge->prev_ = this;
-    end_ = mid_ptr;
+    end_ = mid;
     return true;
   }
   return false;
 }
 
-bool Polygon::PolygonEdge::Remove(DrawingBoard::CoordinatePair const& point,
+bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
                                   PolygonEdge** head) {
-  if (DistanceSquared(*begin_, point) < kMinDistanceFromVertexSquared ||
-      DistanceSquared(*end_, point) < kMinDistanceFromVertexSquared ||
-      DistanceToSegmentSquared(*begin_, *end_, point) <
-          kMinDistanceFromEdgeSquared) {
+  if (DistanceSquared(end_, point) < kMinDistanceFromVertexSquared) {
     next_->prev_ = prev_;
-    next_->begin_ = begin_;
+    next_->SetBegin(begin_);
     prev_->next_ = next_;
-    prev_->end_ = begin_;
     if (*head == this)
       *head = next_;
     prev_ = this;
@@ -313,5 +299,12 @@ bool Polygon::PolygonEdge::Remove(DrawingBoard::CoordinatePair const& point,
     return true;
   }
   return false;
+}
+void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
+  begin_ = begin;
+}
+
+void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
+  end_ = end;
 }
 }  // namespace gk
