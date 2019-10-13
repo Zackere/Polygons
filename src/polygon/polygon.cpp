@@ -15,6 +15,7 @@ constexpr double kMinDistanceFromVertexSquared = 6;
 constexpr double kMinDistanceFromEdgeSquared = 6;
 constexpr wchar_t kUpTack[] = {8869};
 constexpr wchar_t kEqualSign[] = L"=";
+constexpr double kVerySmallValue = 0.00001;
 
 double DistanceSquared(DrawingBoard::Point2d const& from,
                        DrawingBoard::Point2d const& to) {
@@ -318,15 +319,10 @@ bool Polygon::PolygonEdge::OnMouseMove(
     const DrawingBoard::Point2d vector = mouse_pos - prev_mouse_pos;
     if (begin_clicked_) {
       SetBegin(begin_ + vector);
-      prev_->SetEnd(begin_);
     } else if (!is_edge_clicked_) {
       SetEnd(end_ + vector);
-      next_->SetBegin(end_);
     } else if (is_edge_clicked_) {
-      begin_ = begin_ + vector;
-      end_ = end_ + vector;
-      prev_->SetEnd(begin_);
-      next_->SetBegin(end_);
+      MoveByVector(vector);
     }
     return true;
   }
@@ -397,11 +393,14 @@ bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
   return false;
 }
 void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
-  if (begin == begin_)
+  if (DistanceSquared(begin_, begin) < kVerySmallValue) {
+    begin_ = begin;
     return;
+  }
   switch (constraint_) {
     case Constraint::NONE:
       begin_ = begin;
+      prev_->SetEnd(begin_);
       break;
     case Constraint::PERPENDICULAR:
       if (next_ == constrained_edge_) {
@@ -409,14 +408,19 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
             ((next_->end_ - next_->begin_) *
              DotProduct(begin - begin_, next_->end_ - next_->begin_)) /
             DistanceSquared(next_->end_, next_->begin_);
-        next_->begin_ = end_ = end_ + projection;
         begin_ = begin;
+        next_->begin_ = end_ = end_ + projection;
+        prev_->SetEnd(begin_);
       } else {
-        const auto vec = begin - begin_;
-        SetEnd(end_ + vec);
-        prev_->SetBegin(prev_->begin_ + vec);
-        next_->SetBegin(end_);
-        prev_->prev_->SetEnd(prev_->begin_);
+        auto projection_onto_this =
+            ((end_ - begin_) * DotProduct(begin - begin_, end_ - begin_)) /
+            DistanceSquared(end_, begin_);
+        auto projection_onto_prev =
+            ((prev_->end_ - prev_->begin_) *
+             DotProduct(begin - begin_, prev_->end_ - prev_->begin_)) /
+            DistanceSquared(prev_->end_, prev_->begin_);
+        SetEnd(end_ + projection_onto_prev);
+        prev_->SetBegin(prev_->begin_ + projection_onto_this);
       }
       break;
     case Constraint::EQUAL_LENGTH: {
@@ -430,11 +434,14 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
 }
 
 void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
-  if (end == end_)
+  if (DistanceSquared(end_, end) < kVerySmallValue) {
+    end_ = end;
     return;
+  }
   switch (constraint_) {
     case Constraint::NONE:
       end_ = end;
+      next_->SetBegin(end_);
       break;
     case Constraint::PERPENDICULAR:
       if (prev_ == constrained_edge_) {
@@ -442,14 +449,19 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
             ((prev_->end_ - prev_->begin_) *
              DotProduct(end - end_, prev_->end_ - prev_->begin_)) /
             DistanceSquared(prev_->end_, prev_->begin_);
-        prev_->end_ = begin_ = begin_ + projection;
         end_ = end;
+        prev_->end_ = begin_ = begin_ + projection;
+        next_->SetBegin(end_);
       } else {
-        const auto vec = end - end_;
-        SetBegin(begin_ + vec);
-        next_->SetEnd(next_->end_ + vec);
-        prev_->SetEnd(begin_);
-        next_->next_->SetBegin(next_->end_);
+        auto projection_onto_this =
+            ((end_ - begin_) * DotProduct(end - end_, end_ - begin_)) /
+            DistanceSquared(end_, begin_);
+        auto projection_onto_next =
+            ((next_->end_ - next_->begin_) *
+             DotProduct(end - end_, next_->end_ - next_->begin_)) /
+            DistanceSquared(next_->end_, next_->begin_);
+        SetBegin(begin_ + projection_onto_next);
+        next_->SetEnd(next_->end_ + projection_onto_this);
       }
       break;
     case Constraint::EQUAL_LENGTH: {
@@ -458,6 +470,41 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
       begin_ = begin_ + end - end_;
       end_ = end;
       prev_->SetEnd(begin_);
+    } break;
+  }
+}
+
+void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector) {
+  switch (constraint_) {
+    case Constraint::EQUAL_LENGTH:
+    case Constraint::NONE:
+      SetBegin(begin_ + vector);
+      SetEnd(end_ + vector);
+      break;
+    case Constraint::PERPENDICULAR: {
+      if (next_ == constrained_edge_) {
+        const auto projection_onto_this =
+            ((end_ - begin_) * DotProduct(vector, end_ - begin_)) /
+            DistanceSquared(end_, begin_);
+        const auto projection_onto_next =
+            ((next_->end_ - next_->begin_) *
+             DotProduct(vector, next_->end_ - next_->begin_)) /
+            DistanceSquared(next_->end_, next_->begin_);
+        SetEnd(end_ + projection_onto_this);
+        SetBegin(begin_ + projection_onto_this);
+        next_->SetBegin(next_->begin_ + projection_onto_next);
+      } else {
+        const auto projection_onto_this =
+            ((end_ - begin_) * DotProduct(vector, end_ - begin_)) /
+            DistanceSquared(end_, begin_);
+        const auto projection_onto_prev =
+            ((prev_->end_ - prev_->begin_) *
+             DotProduct(vector, prev_->end_ - prev_->begin_)) /
+            DistanceSquared(prev_->end_, prev_->begin_);
+        SetEnd(end_ + projection_onto_this);
+        SetBegin(begin_ + projection_onto_this);
+        prev_->SetEnd(prev_->end_ + projection_onto_prev);
+	  }
     } break;
   }
 }
@@ -500,8 +547,10 @@ bool Polygon::PolygonEdge::SetEqualLength(PolygonEdge* edge) {
 
 void Polygon::PolygonEdge::RemoveConstraint() {
   id_manager::Release(constraint_id_);
+  constraint_id_ = 0;
   constraint_ = Constraint::NONE;
   if (constrained_edge_) {
+    constrained_edge_->constraint_id_ = 0;
     constrained_edge_->constraint_ = Constraint::NONE;
     constrained_edge_->constrained_edge_ = nullptr;
     constrained_edge_ = nullptr;

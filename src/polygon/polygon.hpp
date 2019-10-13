@@ -62,6 +62,7 @@ class Polygon {
     bool Remove(DrawingBoard::Point2d const& point, PolygonEdge** head);
     void SetBegin(DrawingBoard::Point2d const& begin);
     void SetEnd(DrawingBoard::Point2d const& end);
+    void MoveByVector(DrawingBoard::Point2d const& vector);
 
     bool SetPerpendicular(PolygonEdge* edge);
     bool SetEqualLength(PolygonEdge* edge);
