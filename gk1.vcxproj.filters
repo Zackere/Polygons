@@ -14,6 +14,9 @@
     <Filter Include="Polygon">
       <UniqueIdentifier>{62034807-7c2e-4d64-a1c7-338cbb104127}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Id Manager">
+      <UniqueIdentifier>{6b3567a1-79de-4a18-8673-3de26383be79}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\gk1_main.cpp">
@@ -28,6 +31,9 @@
     <ClCompile Include="src\polygon\polygon.cpp">
       <Filter>Polygon</Filter>
     </ClCompile>
+    <ClCompile Include="src\id_manager\id_manager.cpp">
+      <Filter>Id Manager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\drawing_board\drawing_board.hpp">
@@ -41,6 +47,9 @@
     </ClInclude>
     <ClInclude Include="src\polygon\polygon.hpp">
       <Filter>Polygon</Filter>
+    </ClInclude>
+    <ClInclude Include="src\id_manager\id_manager.hpp">
+      <Filter>Id Manager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

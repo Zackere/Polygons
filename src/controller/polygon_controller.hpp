@@ -40,8 +40,11 @@ class PolygonController : public Controller {
     CREATE_VERTEX,
     CREATE_POLYGON,
     PURE_DESTRUCTION,
-    TOTAL_STATES
+    SET_PERPENDICULAR,
+    SET_EQUAL_LENGTH,
+    TOTAL_STATES,
   } state_ = State::FREE;
+  void SetState(State state, DrawingBoard* board);
 
   std::optional<DrawingBoard::Point2d> last_click_;
   std::vector<DrawingBoard::Point2d> polygon_verticies_;

@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "../drawing_board/drawing_board.hpp"
+#include "../id_manager/id_manager.hpp"
 
 namespace gk {
 class PolygonController;
@@ -30,6 +31,8 @@ class Polygon {
   void OnControllerStateChanged(PolygonController* controller);
   bool AddVertex(DrawingBoard::Point2d const& pos);
   bool Remove(DrawingBoard::Point2d const& point);
+  bool SetPerpendicular(DrawingBoard::Point2d const& p1,
+                        DrawingBoard::Point2d const& p2);
 
  private:
   class PolygonEdge {
@@ -43,6 +46,8 @@ class Polygon {
     void AddAfter(PolygonEdge* edge);
     void AddBefore(PolygonEdge* point);
     PolygonEdge* Next() { return next_; }
+    DrawingBoard::Point2d const& Begin() const { return begin_; }
+    DrawingBoard::Point2d const& End() const { return end_; }
 
     bool OnMouseLButtonDown(DrawingBoard::Point2d const& mouse_pos);
     bool OnMouseLButtonUp(DrawingBoard::Point2d const& mouse_pos);
@@ -56,7 +61,16 @@ class Polygon {
     void SetBegin(DrawingBoard::Point2d const& begin);
     void SetEnd(DrawingBoard::Point2d const& end);
 
+    bool SetPerpendicular(PolygonEdge* edge);
+    void RemoveConstraint();
+
    private:
+    enum class Constraint {
+      NONE,
+      PERPENDICULAR,
+      EQUAL_LENGTH,
+    };
+
     DrawingBoard::Point2d begin_, end_;
     PolygonEdge *next_ = this, *prev_ = this;
     COLORREF edge_color_ = 0, vertex_color_ = 0;
@@ -64,6 +78,10 @@ class Polygon {
     bool is_edge_clicked_ = false;
     bool is_clicked_ = false;
     bool begin_clicked_ = false;
+
+    Constraint constraint_ = Constraint::NONE;
+    PolygonEdge* constrained_edge_ = nullptr;
+    id_manager::ID constraint_id_ = 0;
   };
 
   std::unique_ptr<PolygonEdge> body_;

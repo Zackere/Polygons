@@ -22,12 +22,14 @@
     <ClCompile Include="src\controller\polygon_controller.cpp" />
     <ClCompile Include="src\drawing_board\drawing_board.cpp" />
     <ClCompile Include="src\gk1_main.cpp" />
+    <ClCompile Include="src\id_manager\id_manager.cpp" />
     <ClCompile Include="src\polygon\polygon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\controller\controller.hpp" />
     <ClInclude Include="src\controller\polygon_controller.hpp" />
     <ClInclude Include="src\drawing_board\drawing_board.hpp" />
+    <ClInclude Include="src\id_manager\id_manager.hpp" />
     <ClInclude Include="src\polygon\polygon.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

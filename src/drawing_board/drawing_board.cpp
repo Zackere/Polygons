@@ -87,7 +87,7 @@ DrawingBoard::DrawingBoard(Size posx,
   SetWindowLongPtr(window_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   window_hdc_ = GetDC(window_);
   POINT mouse_pos = GetCursorPosInWindow(window_);
-  last_mouse_pos_ = {mouse_pos.x, mouse_pos.y};
+  last_mouse_pos_ = Point2d(mouse_pos.x, mouse_pos.y);
 
   hdc_mem_ = CreateCompatibleDC(window_hdc_);
   off_screen_bitmap_ = CreateCompatibleBitmap(window_hdc_, width, height);
@@ -130,7 +130,7 @@ void DrawingBoard::DrawTxt(Coordinate posx,
   HFONT hFont;
   hFont = CreateFont(font_size, 0, 0, 0, FW_THIN, FALSE, FALSE, FALSE,
                      DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS,
-                     ANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("arial"));
+                     NONANTIALIASED_QUALITY, VARIABLE_PITCH, TEXT("arial"));
   HFONT old_font = reinterpret_cast<HFONT>(SelectObject(hdc_mem_, hFont));
   COLORREF old_color = SetTextColor(hdc_mem_, color);
   DrawTextW(hdc_mem_, text.data(), text.length(), &rect, DT_NOCLIP);
@@ -139,14 +139,14 @@ void DrawingBoard::DrawTxt(Coordinate posx,
   DeleteObject(hFont);
 }
 
-void DrawingBoard::ShowError(std::wstring error_message, bool fatal) {
+void DrawingBoard::ShowError(std::wstring_view error_message, bool fatal) {
   MessageBoxW(NULL, error_message.data(), nullptr,
               fatal ? MB_ICONERROR : MB_ICONWARNING);
   if (fatal)
     PostQuitMessage(1);
 }
 
-void DrawingBoard::SetTitle(std::wstring new_title) {
+void DrawingBoard::SetTitle(std::wstring_view new_title) {
   SetWindowTextW(window_, new_title.data());
 }
 
@@ -173,22 +173,22 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     case WM_LBUTTONDBLCLK:
       if (window)
         window->OnMouseLButtonDoubleClick(
-            Point2d{LOWORD(lParam), HIWORD(lParam)} / window->GetPixelSize());
+            Point2d(LOWORD(lParam), HIWORD(lParam)) / window->GetPixelSize());
       return 0;
     case WM_LBUTTONDOWN:
       if (window)
-        window->OnMouseLButtonDown(Point2d{LOWORD(lParam), HIWORD(lParam)} /
+        window->OnMouseLButtonDown(Point2d(LOWORD(lParam), HIWORD(lParam)) /
                                    window->GetPixelSize());
       return 0;
     case WM_LBUTTONUP:
       if (window)
-        window->OnMouseLButtonUp(Point2d{LOWORD(lParam), HIWORD(lParam)} /
+        window->OnMouseLButtonUp(Point2d(LOWORD(lParam), HIWORD(lParam)) /
                                  window->GetPixelSize());
       return 0;
     case WM_MOUSEMOVE:
       if (window) {
         Point2d pos =
-            Point2d{LOWORD(lParam), HIWORD(lParam)} / window->GetPixelSize();
+            Point2d(LOWORD(lParam), HIWORD(lParam)) / window->GetPixelSize();
         window->OnMouseMove(pos);
         window->last_mouse_pos_ = pos;
       }

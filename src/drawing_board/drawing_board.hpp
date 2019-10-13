@@ -15,10 +15,8 @@ class Controller;
 class DrawingBoard {
  public:
   using Size = int;
-  using Coordinate = int;
+  using Coordinate = double;
   struct Point2d {
-    Coordinate x;
-    Coordinate y;
     Point2d(Coordinate x, Coordinate y) : x(x), y(y) {}
     bool operator==(Point2d const& p) const { return x == p.x && y == p.y; }
     Point2d operator-(Point2d const& p) const { return {x - p.x, y - p.y}; }
@@ -26,15 +24,14 @@ class DrawingBoard {
     Point2d operator/(Coordinate c) const { return {x / c, y / c}; }
     Point2d operator*(Coordinate c) const { return {x * c, y * c}; }
     Point2d operator*(Point2d const& p) const {
-      auto ret = std::complex<double>(x, y) * std::complex<double>(p.x, p.y);
-      return {static_cast<Coordinate>(ret.real()),
-              static_cast<Coordinate>(ret.imag())};
+      return {x * p.x - y * p.y, x * p.y + y * p.x};
     }
     Point2d operator/(Point2d const& p) const {
-      auto ret = std::complex<double>(x, y) / std::complex<double>(p.x, p.y);
-      return {static_cast<Coordinate>(ret.real()),
-              static_cast<Coordinate>(ret.imag())};
+      return Point2d(x * p.x + y * p.y, y * p.x - x * p.y) /
+             (p.x * p.x + p.y * p.y);
     }
+    Coordinate x;
+    Coordinate y;
   };
 
   static bool RegisterWindowClass(HINSTANCE hInstance);
@@ -62,12 +59,12 @@ class DrawingBoard {
                std::wstring_view text,
                Size font_size,
                COLORREF color);
-  void ShowError(std::wstring error_message, bool fatal);
-  void SetTitle(std::wstring new_title);
+  void ShowError(std::wstring_view error_message, bool fatal);
+  void SetTitle(std::wstring_view new_title);
   Point2d const& GetPreviousMousePos() const { return last_mouse_pos_; }
   bool GetKeyState(int key_id) const {
     return GetAsyncKeyState(key_id) & 1 << (sizeof(SHORT) * 8 - 1);
-  };
+  }
 
  private:
   static LRESULT CALLBACK WndProc(HWND hWnd,

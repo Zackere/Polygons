@@ -62,6 +62,22 @@ bool PolygonController::OnMouseLButtonDoubleClick(
           ++it;
       }
       return true;
+      case State::SET_PERPENDICULAR: {
+        if (last_click_.has_value()) {
+          for (auto& polygon : polygons_)
+            if (polygon->SetPerpendicular(last_click_.value(), mouse_pos)) {
+              last_click_.reset();
+              SetState(State::FREE, board);
+              return true;
+            }
+          last_click_.emplace(mouse_pos);
+          return false;
+        } else {
+          last_click_.emplace(mouse_pos);
+          return false;
+        }
+        return true;
+      }
     }
   }
   return false;
@@ -88,26 +104,24 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
   State old_state = state_;
   switch (key_code) {
     case 'Q':
-      state_ = State::FREE;
-      board->SetTitle(L"Free mode");
+      SetState(State::FREE, board);
       break;
     case 'W':
-      state_ = State::CREATE_VERTEX;
-      board->SetTitle(L"Vertex creation mode");
+      SetState(State::CREATE_VERTEX, board);
       break;
-    case 'R':
-      state_ = State::CREATE_POLYGON;
-      board->SetTitle(L"Polygon creation mode");
-      polygon_verticies_.clear();
+    case 'E':
+      SetState(State::CREATE_POLYGON, board);
+      break;
+    case 'A':
+      SetState(State::SET_PERPENDICULAR, board);
+      break;
+    case 'S':
+      SetState(State::SET_EQUAL_LENGTH, board);
       break;
     case 'D':
-      state_ = State::PURE_DESTRUCTION;
-      board->SetTitle(L"Object deletion mode");
+      SetState(State::PURE_DESTRUCTION, board);
       break;
   }
-  if (old_state != state_)
-    for (auto& polygon : polygons_)
-      polygon->OnControllerStateChanged(this);
   return false;
 }
 
@@ -115,4 +129,39 @@ void PolygonController::Draw(DrawingBoard* board) {
   for (auto& polygon : polygons_)
     polygon->Display(board);
 }
+
+void PolygonController::SetState(State state, DrawingBoard* board) {
+  State old_state = state_;
+  switch (state) {
+    case State::FREE:
+      board->SetTitle(L"Free mode");
+      break;
+    case State::CREATE_VERTEX:
+      board->SetTitle(L"Vertex creation mode");
+      break;
+    case State::CREATE_POLYGON:
+      board->SetTitle(L"Polygon creation mode");
+      polygon_verticies_.clear();
+      break;
+    case State::PURE_DESTRUCTION:
+      board->SetTitle(L"Vertex deletion mode");
+      break;
+    case State::SET_PERPENDICULAR:
+      last_click_.reset();
+      board->SetTitle(L"Adding perpendicular constraint");
+      break;
+    case State::SET_EQUAL_LENGTH:
+      last_click_.reset();
+      board->SetTitle(L"Adding equal length constraint");
+      break;
+    case State::TOTAL_STATES:
+    default:
+      return;
+  }
+  state_ = state;
+  if (old_state != state_)
+    for (auto& polygon : polygons_)
+      polygon->OnControllerStateChanged(this);
+}
+
 }  // namespace gk
