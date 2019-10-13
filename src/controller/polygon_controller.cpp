@@ -78,6 +78,22 @@ bool PolygonController::OnMouseLButtonDoubleClick(
         }
         return true;
       }
+      case State::SET_EQUAL_LENGTH: {
+        if (last_click_.has_value()) {
+          for (auto& polygon : polygons_)
+            if (polygon->SetEqualLength(last_click_.value(), mouse_pos)) {
+              last_click_.reset();
+              SetState(State::FREE, board);
+              return true;
+            }
+          last_click_.emplace(mouse_pos);
+          return false;
+        } else {
+          last_click_.emplace(mouse_pos);
+          return false;
+        }
+        return true;
+      }
     }
   }
   return false;

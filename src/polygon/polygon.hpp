@@ -33,6 +33,8 @@ class Polygon {
   bool Remove(DrawingBoard::Point2d const& point);
   bool SetPerpendicular(DrawingBoard::Point2d const& p1,
                         DrawingBoard::Point2d const& p2);
+  bool SetEqualLength(DrawingBoard::Point2d const& p1,
+                      DrawingBoard::Point2d const& p2);
 
  private:
   class PolygonEdge {
@@ -62,9 +64,12 @@ class Polygon {
     void SetEnd(DrawingBoard::Point2d const& end);
 
     bool SetPerpendicular(PolygonEdge* edge);
+    bool SetEqualLength(PolygonEdge* edge);
     void RemoveConstraint();
 
    private:
+    void SetLength(double length);
+
     enum class Constraint {
       NONE,
       PERPENDICULAR,

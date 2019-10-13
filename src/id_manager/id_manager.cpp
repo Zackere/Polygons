@@ -11,7 +11,7 @@ namespace {
 std::set<ID> used_ids_;
 }  // namespace
 ID Get() {
-  ID ret = 0;
+  ID ret =  1;
   for (auto id : used_ids_)
     if (id == ret) {
       ++ret;

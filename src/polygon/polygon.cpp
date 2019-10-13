@@ -14,7 +14,7 @@ namespace {
 constexpr double kMinDistanceFromVertexSquared = 6;
 constexpr double kMinDistanceFromEdgeSquared = 6;
 constexpr wchar_t kUpTack[] = {8869};
-constexpr wchar_t kEqual[] = L"=";
+constexpr wchar_t kEqualSign[] = L"=";
 
 double DistanceSquared(DrawingBoard::Point2d const& from,
                        DrawingBoard::Point2d const& to) {
@@ -41,6 +41,14 @@ double DistanceToSegmentSquared(DrawingBoard::Point2d const& s1,
       static_cast<int>(s1.x + t * (static_cast<double>(s2.x) - s1.x)),
       static_cast<int>(s1.y + t * (static_cast<double>(s2.y) - s1.y)));
   return DistanceSquared(p, projection);
+}
+
+DrawingBoard::Point2d ClosestPointOnCircle(DrawingBoard::Point2d const& center,
+                                           double radius,
+                                           DrawingBoard::Point2d const& to) {
+  auto pos = (to - center) * radius;
+  pos = pos / std::sqrt(DistanceSquared(to, center));
+  return center + pos;
 }
 
 void DisplayLabel(DrawingBoard* board,
@@ -151,6 +159,25 @@ bool Polygon::SetPerpendicular(DrawingBoard::Point2d const& p1,
   return e1->SetPerpendicular(e2);
 }
 
+bool Polygon::SetEqualLength(DrawingBoard::Point2d const& p1,
+                             DrawingBoard::Point2d const& p2) {
+  PolygonEdge *e1 = nullptr, *e2 = nullptr;
+  auto* ptr = body_.get();
+  do {
+    if (DistanceToSegmentSquared(ptr->Begin(), ptr->End(), p1) <
+        kMinDistanceFromEdgeSquared) {
+      e1 = ptr;
+    }
+    if (DistanceToSegmentSquared(ptr->Begin(), ptr->End(), p2) <
+        kMinDistanceFromEdgeSquared) {
+      e2 = ptr;
+    }
+  } while ((ptr = ptr->Next()) != body_.get());
+  if (!e1 || !e2 /* || !(e1->Next() != e2 && e2->Next() != e1) */ || e1 == e2)
+    return false;
+  return e1->SetEqualLength(e2);
+}
+
 Polygon::PolygonEdge::~PolygonEdge() {
   if (next_ != this) {
     prev_->next_ = nullptr;
@@ -237,7 +264,7 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
     case Constraint::EQUAL_LENGTH:
       DisplayLabel(
           drawing_board, (begin_ + end_) / 2,
-          std::wstring(kEqual).append(std::to_wstring(constraint_id_)));
+          std::wstring(kEqualSign).append(std::to_wstring(constraint_id_)));
       break;
   }
 }
@@ -296,8 +323,8 @@ bool Polygon::PolygonEdge::OnMouseMove(
       SetEnd(end_ + vector);
       next_->SetBegin(end_);
     } else if (is_edge_clicked_) {
-      SetBegin(begin_ + vector);
-      SetEnd(end_ + vector);
+      begin_ = begin_ + vector;
+      end_ = end_ + vector;
       prev_->SetEnd(begin_);
       next_->SetBegin(end_);
     }
@@ -392,8 +419,13 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
         prev_->prev_->SetEnd(prev_->begin_);
       }
       break;
-    case Constraint::EQUAL_LENGTH:
-      break;
+    case Constraint::EQUAL_LENGTH: {
+      begin_ = ClosestPointOnCircle(
+          end_, std::sqrt(DistanceSquared(end_, begin_)), begin);
+      end_ = end_ + begin - begin_;
+      begin_ = begin;
+      next_->SetBegin(end_);
+    } break;
   }
 }
 
@@ -420,8 +452,13 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
         next_->next_->SetBegin(next_->end_);
       }
       break;
-    case Constraint::EQUAL_LENGTH:
-      break;
+    case Constraint::EQUAL_LENGTH: {
+      end_ = ClosestPointOnCircle(
+          begin_, std::sqrt(DistanceSquared(end_, begin_)), end);
+      begin_ = begin_ + end - end_;
+      end_ = end;
+      prev_->SetEnd(begin_);
+    } break;
   }
 }
 
@@ -438,15 +475,26 @@ bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge) {
     begin_ = edge->end_ = (edge->begin_ + end_ * DrawingBoard::Point2d{0, 1}) /
                           DrawingBoard::Point2d{0, 1};
   } else {
-    auto pos = (begin_ - circle_center) *
-               std::sqrt(DistanceSquared(end_, circle_center));
-    pos = pos / std::sqrt(DistanceSquared(begin_, circle_center));
-    begin_ = edge->end_ = circle_center + pos;
+    begin_ = edge->end_ = ClosestPointOnCircle(
+        circle_center, std::sqrt(DistanceSquared(end_, circle_center)), begin_);
   }
   constraint_ = edge->constraint_ = Constraint::PERPENDICULAR;
   constrained_edge_ = edge;
   edge->constrained_edge_ = this;
-  edge->constraint_id_ = constraint_id_ = id_manager::Get();
+  constraint_id_ = edge->constraint_id_ = id_manager::Get();
+  return true;
+}
+
+bool Polygon::PolygonEdge::SetEqualLength(PolygonEdge* edge) {
+  if (constraint_ != Constraint::NONE ||
+      edge->constraint_ != Constraint::NONE || constrained_edge_ ||
+      edge->constrained_edge_)
+    return false;
+  constraint_ = edge->constraint_ = Constraint::EQUAL_LENGTH;
+  constrained_edge_ = edge;
+  edge->constrained_edge_ = this;
+  constraint_id_ = edge->constraint_id_ = id_manager::Get();
+  edge->SetLength(std::sqrt(DistanceSquared(begin_, end_)));
   return true;
 }
 
@@ -458,6 +506,14 @@ void Polygon::PolygonEdge::RemoveConstraint() {
     constrained_edge_->constrained_edge_ = nullptr;
     constrained_edge_ = nullptr;
   }
+}
+
+void Polygon::PolygonEdge::SetLength(double length) {
+  auto vec = end_ - begin_;
+  vec = vec / std::sqrt(DistanceSquared(vec, {0, 0}));
+  vec = vec * length;
+  end_ = begin_ + vec;
+  next_->SetBegin(end_);
 }
 
 }  // namespace gk
