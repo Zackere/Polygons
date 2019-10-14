@@ -4,6 +4,10 @@
 
 #include <Windows.h>
 
+#undef min
+#undef max
+
+#include <algorithm>
 #include <complex>
 #include <memory>
 #include <string_view>
@@ -17,8 +21,12 @@ class DrawingBoard {
   using Size = int;
   using Coordinate = double;
   struct Point2d {
+    static constexpr double kVerySmallValue = 0.001;
     Point2d(Coordinate x, Coordinate y) : x(x), y(y) {}
-    bool operator==(Point2d const& p) const { return x == p.x && y == p.y; }
+    bool operator==(Point2d const& p) const {
+      return RelativeDifference(x, p.x) < kVerySmallValue &&
+             RelativeDifference(y, p.y) < kVerySmallValue;
+    }
     Point2d operator-(Point2d const& p) const { return {x - p.x, y - p.y}; }
     Point2d operator+(Point2d const& p) const { return {x + p.x, y + p.y}; }
     Point2d operator/(Coordinate c) const { return {x / c, y / c}; }
@@ -32,6 +40,12 @@ class DrawingBoard {
     }
     Coordinate x;
     Coordinate y;
+
+   private:
+    static double RelativeDifference(double a, double b) {
+      const auto d = std::max(std::abs(a), std::abs(b));
+      return d == 0.0 ? 0.0 : std::abs(a - b) / d;
+    }
   };
 
   static bool RegisterWindowClass(HINSTANCE hInstance);

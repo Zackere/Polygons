@@ -15,7 +15,7 @@ constexpr double kMinDistanceFromVertexSquared = 6;
 constexpr double kMinDistanceFromEdgeSquared = 6;
 constexpr wchar_t kUpTack[] = {8869};
 constexpr wchar_t kEqualSign[] = L"=";
-constexpr double kVerySmallValue = 0.00001;
+constexpr double kMaxLength = 1000;
 
 double DistanceSquared(DrawingBoard::Point2d const& from,
                        DrawingBoard::Point2d const& to) {
@@ -198,6 +198,12 @@ Polygon::PolygonEdge::PolygonEdge(DrawingBoard::Point2d const& begin,
       vertex_color_(vertex_color) {}
 
 void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
+  DrawingBoard::Point2d constrained_begin{
+      std::max(0.0, std::min<double>(drawing_board->GetWidth(), begin_.x)),
+      std::max(0.0, std::min<double>(drawing_board->GetWidth(), begin_.y))};
+  DrawingBoard::Point2d constrained_end{
+      std::max(0.0, std::min<double>(drawing_board->GetWidth(), end_.x)),
+      std::max(0.0, std::min<double>(drawing_board->GetWidth(), end_.y))};
   int x, y, i, xe, ye;
   int dx = static_cast<int>(end_.x) - static_cast<int>(begin_.x);
   int dy = static_cast<int>(end_.y) - static_cast<int>(begin_.y);
@@ -209,11 +215,11 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
     if (dx >= 0) {
       x = begin_.x;
       y = begin_.y;
-      xe = end_.x;
+      xe = constrained_end.x;
     } else {
       x = end_.x;
       y = end_.y;
-      xe = begin_.x;
+      xe = constrained_begin.x;
     }
     drawing_board->SetPixel(x, y, edge_color_);
     for (i = 0; x < xe; ++i) {
@@ -233,11 +239,11 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
     if (dy >= 0) {
       x = begin_.x;
       y = begin_.y;
-      ye = end_.y;
+      ye = constrained_end.y;
     } else {
       x = end_.x;
       y = end_.y;
-      ye = begin_.y;
+      ye = constrained_begin.y;
     }
     drawing_board->SetPixel(x, y, edge_color_);
     for (i = 0; y < ye; ++i) {
@@ -317,12 +323,12 @@ bool Polygon::PolygonEdge::OnMouseMove(
     if (mouse_pos == prev_mouse_pos)
       return true;
     const DrawingBoard::Point2d vector = mouse_pos - prev_mouse_pos;
-    if (begin_clicked_) {
-      SetBegin(begin_ + vector);
-    } else if (!is_edge_clicked_) {
-      SetEnd(end_ + vector);
-    } else if (is_edge_clicked_) {
+    if (is_edge_clicked_) {
       MoveByVector(vector);
+    } else if (begin_clicked_) {
+      SetBegin(begin_ + vector);
+    } else {
+      SetEnd(end_ + vector);
     }
     return true;
   }
@@ -393,10 +399,9 @@ bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
   return false;
 }
 void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
-  if (DistanceSquared(begin_, begin) < kVerySmallValue) {
-    begin_ = begin;
+  if (begin_ == begin)
     return;
-  }
+
   switch (constraint_) {
     case Constraint::NONE:
       begin_ = begin;
@@ -424,20 +429,28 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
       }
       break;
     case Constraint::EQUAL_LENGTH: {
-      begin_ = ClosestPointOnCircle(
-          end_, std::sqrt(DistanceSquared(end_, begin_)), begin);
-      end_ = end_ + begin - begin_;
       begin_ = begin;
-      next_->SetBegin(end_);
+      if (next_ == constrained_edge_) {
+        constrained_edge_->SetLengthByEnd(
+            std::sqrt(DistanceSquared(begin_, end_)));
+        prev_->SetEnd(begin_);
+      } else if (prev_ == constrained_edge_) {
+        prev_->end_ = begin;
+        constrained_edge_->SetLengthByBegin(
+            std::sqrt(DistanceSquared(begin_, end_)));
+      } else {
+        constrained_edge_->SetLengthByBegin(
+            std::sqrt(DistanceSquared(begin_, end_)));
+        prev_->SetEnd(begin_);
+      }
     } break;
   }
 }
 
 void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
-  if (DistanceSquared(end_, end) < kVerySmallValue) {
-    end_ = end;
+  if (end == end_)
     return;
-  }
+
   switch (constraint_) {
     case Constraint::NONE:
       end_ = end;
@@ -465,21 +478,34 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
       }
       break;
     case Constraint::EQUAL_LENGTH: {
-      end_ = ClosestPointOnCircle(
-          begin_, std::sqrt(DistanceSquared(end_, begin_)), end);
-      begin_ = begin_ + end - end_;
       end_ = end;
-      prev_->SetEnd(begin_);
+      if (prev_ == constrained_edge_) {
+        constrained_edge_->SetLengthByEnd(
+            std::sqrt(DistanceSquared(begin_, end_)));
+        next_->SetBegin(end_);
+      } else if (next_ == constrained_edge_) {
+        next_->begin_ = end;
+        constrained_edge_->SetLengthByEnd(
+            std::sqrt(DistanceSquared(begin_, end_)));
+      } else {
+        constrained_edge_->SetLengthByEnd(
+            std::sqrt(DistanceSquared(begin_, end_)));
+        next_->SetBegin(end_);
+      }
     } break;
   }
 }
 
 void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector) {
+  if (vector == DrawingBoard::Point2d{0, 0})
+    return;
   switch (constraint_) {
     case Constraint::EQUAL_LENGTH:
     case Constraint::NONE:
-      SetBegin(begin_ + vector);
-      SetEnd(end_ + vector);
+      begin_ = begin_ + vector;
+      end_ = end_ + vector;
+      prev_->SetEnd(begin_);
+      next_->SetBegin(end_);
       break;
     case Constraint::PERPENDICULAR: {
       if (next_ == constrained_edge_) {
@@ -504,7 +530,7 @@ void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector) {
         SetEnd(end_ + projection_onto_this);
         SetBegin(begin_ + projection_onto_this);
         prev_->SetEnd(prev_->end_ + projection_onto_prev);
-	  }
+      }
     } break;
   }
 }
@@ -541,7 +567,7 @@ bool Polygon::PolygonEdge::SetEqualLength(PolygonEdge* edge) {
   constrained_edge_ = edge;
   edge->constrained_edge_ = this;
   constraint_id_ = edge->constraint_id_ = id_manager::Get();
-  edge->SetLength(std::sqrt(DistanceSquared(begin_, end_)));
+  edge->SetLengthByBegin(std::sqrt(DistanceSquared(begin_, end_)));
   return true;
 }
 
@@ -557,12 +583,29 @@ void Polygon::PolygonEdge::RemoveConstraint() {
   }
 }
 
-void Polygon::PolygonEdge::SetLength(double length) {
-  auto vec = end_ - begin_;
-  vec = vec / std::sqrt(DistanceSquared(vec, {0, 0}));
-  vec = vec * length;
-  end_ = begin_ + vec;
-  next_->SetBegin(end_);
+void Polygon::PolygonEdge::SetLengthByBegin(double length) {
+  auto vec = begin_ - end_;
+  vec = vec / std::sqrt(DistanceSquared(begin_, end_));
+  if (length <= kMaxLength) {
+    vec = vec * length;
+    begin_ = end_ + vec;
+    prev_->SetEnd(begin_);
+  } else {
+    SetLengthByBegin(kMaxLength);
+    constrained_edge_->SetLengthByEnd(kMaxLength);
+  }
 }
 
+void Polygon::PolygonEdge::SetLengthByEnd(double length) {
+  auto vec = end_ - begin_;
+  vec = vec / std::sqrt(DistanceSquared(begin_, end_));
+  if (length <= kMaxLength) {
+    vec = vec * length;
+    end_ = begin_ + vec;
+    next_->SetBegin(end_);
+  } else {
+    SetLengthByEnd(kMaxLength);
+    constrained_edge_->SetLengthByBegin(kMaxLength);
+  }
+}
 }  // namespace gk

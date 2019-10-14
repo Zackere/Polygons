@@ -69,7 +69,8 @@ class Polygon {
     void RemoveConstraint();
 
    private:
-    void SetLength(double length);
+    void SetLengthByBegin(double length);
+    void SetLengthByEnd(double length);
 
     enum class Constraint {
       NONE,
