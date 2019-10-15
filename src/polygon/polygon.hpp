@@ -50,6 +50,7 @@ class Polygon {
     PolygonEdge* Next() { return next_; }
     DrawingBoard::Point2d const& Begin() const { return begin_; }
     DrawingBoard::Point2d const& End() const { return end_; }
+    double Length() const;
 
     bool OnMouseLButtonDown(DrawingBoard::Point2d const& mouse_pos);
     bool OnMouseLButtonUp(DrawingBoard::Point2d const& mouse_pos);
@@ -71,6 +72,8 @@ class Polygon {
    private:
     void SetLengthByBegin(double length);
     void SetLengthByEnd(double length);
+    void SetPerpendicularByBegin(PolygonEdge* edge);
+    void SetPerpendicularByEnd(PolygonEdge* edge);
 
     enum class Constraint {
       NONE,

@@ -6,6 +6,7 @@
 #undef max
 
 #include <algorithm>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -57,6 +58,40 @@ void DisplayLabel(DrawingBoard* board,
                   std::wstring_view label) {
   constexpr int font_size = 15;
   board->DrawTxt(pos.x, pos.y, label.data(), font_size, RGB(255, 0, 0));
+}
+
+double Determinant(DrawingBoard::Point2d const& p1,
+                   DrawingBoard::Point2d const& p2) {
+  return p1.x * p2.y - p1.y * p2.x;
+}
+
+bool Colinear(DrawingBoard::Point2d const& p1,
+              DrawingBoard::Point2d const& p2,
+              DrawingBoard::Point2d const& p3) {
+  return std::abs(Determinant(p1 - p2, p2 - p3)) <
+         DrawingBoard::Point2d::kVerySmallValue;
+}
+
+std::optional<DrawingBoard::Point2d> Intersect(
+    DrawingBoard::Point2d const& A1,
+    DrawingBoard::Point2d const& A2,
+    DrawingBoard::Point2d const& B1,
+    DrawingBoard::Point2d const& B2) {
+  // Line represented as a1x + b1y = c1;
+  double a1 = A2.y - A1.y;
+  double b1 = A1.x - A2.x;
+  double c1 = a1 * A1.x + b1 * A1.y;
+  // Line represented as a2x + b2y = c2;
+  double a2 = B2.y - B1.y;
+  double b2 = B1.x - B2.x;
+  double c2 = a2 * B1.x + b2 * B1.y;
+  double det = a1 * b2 - a2 * b1;
+  if (std::abs(det) < DrawingBoard::Point2d::kVerySmallValue) {
+    return std::nullopt;
+  } else {
+    return DrawingBoard::Point2d{(b2 * c1 - b1 * c2) / det,
+                                 (a1 * c2 - a2 * c1) / det};
+  }
 }
 }  // namespace
 std::unique_ptr<Polygon> Polygon::Create(DrawingBoard::Point2d const& p1,
@@ -155,7 +190,7 @@ bool Polygon::SetPerpendicular(DrawingBoard::Point2d const& p1,
       e2 = ptr;
     }
   } while ((ptr = ptr->Next()) != body_.get());
-  if (!e1 || !e2 || !(e1->Next() == e2 || e2->Next() == e1) || e1 == e2)
+  if (!e1 || !e2 /* || !(e1->Next() == e2 || e2->Next() == e1) */ || e1 == e2)
     return false;
   return e1->SetPerpendicular(e2);
 }
@@ -289,6 +324,9 @@ void Polygon::PolygonEdge::AddBefore(PolygonEdge* edge) {
   prev_->next_ = edge;
   prev_ = edge;
 }
+double Polygon::PolygonEdge::Length() const {
+  return std::sqrt(DistanceSquared(begin_, end_));
+}
 bool Polygon::PolygonEdge::OnMouseLButtonDown(
     DrawingBoard::Point2d const& mouse_pos) {
   if (DistanceSquared(mouse_pos, begin_) < kMinDistanceFromVertexSquared) {
@@ -408,39 +446,28 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
       prev_->SetEnd(begin_);
       break;
     case Constraint::PERPENDICULAR:
+      begin_ = begin;
       if (next_ == constrained_edge_) {
-        auto projection =
-            ((next_->end_ - next_->begin_) *
-             DotProduct(begin - begin_, next_->end_ - next_->begin_)) /
-            DistanceSquared(next_->end_, next_->begin_);
-        begin_ = begin;
-        next_->begin_ = end_ = end_ + projection;
+        constrained_edge_->SetPerpendicularByEnd(this);
         prev_->SetEnd(begin_);
+      } else if (prev_ == constrained_edge_) {
+        prev_->end_ = begin;
+        constrained_edge_->SetPerpendicularByBegin(this);
       } else {
-        auto projection_onto_this =
-            ((end_ - begin_) * DotProduct(begin - begin_, end_ - begin_)) /
-            DistanceSquared(end_, begin_);
-        auto projection_onto_prev =
-            ((prev_->end_ - prev_->begin_) *
-             DotProduct(begin - begin_, prev_->end_ - prev_->begin_)) /
-            DistanceSquared(prev_->end_, prev_->begin_);
-        SetEnd(end_ + projection_onto_prev);
-        prev_->SetBegin(prev_->begin_ + projection_onto_this);
+        constrained_edge_->SetPerpendicularByEnd(this);
+        prev_->SetEnd(begin_);
       }
       break;
     case Constraint::EQUAL_LENGTH: {
       begin_ = begin;
       if (next_ == constrained_edge_) {
-        constrained_edge_->SetLengthByEnd(
-            std::sqrt(DistanceSquared(begin_, end_)));
+        constrained_edge_->SetLengthByEnd(Length());
         prev_->SetEnd(begin_);
       } else if (prev_ == constrained_edge_) {
         prev_->end_ = begin;
-        constrained_edge_->SetLengthByBegin(
-            std::sqrt(DistanceSquared(begin_, end_)));
+        constrained_edge_->SetLengthByBegin(Length());
       } else {
-        constrained_edge_->SetLengthByBegin(
-            std::sqrt(DistanceSquared(begin_, end_)));
+        constrained_edge_->SetLengthByBegin(Length());
         prev_->SetEnd(begin_);
       }
     } break;
@@ -457,39 +484,28 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
       next_->SetBegin(end_);
       break;
     case Constraint::PERPENDICULAR:
+      end_ = end;
       if (prev_ == constrained_edge_) {
-        auto projection =
-            ((prev_->end_ - prev_->begin_) *
-             DotProduct(end - end_, prev_->end_ - prev_->begin_)) /
-            DistanceSquared(prev_->end_, prev_->begin_);
-        end_ = end;
-        prev_->end_ = begin_ = begin_ + projection;
+        constrained_edge_->SetPerpendicularByBegin(this);
         next_->SetBegin(end_);
+      } else if (next_ == constrained_edge_) {
+        next_->begin_ = end_;
+        constrained_edge_->SetPerpendicularByEnd(this);
       } else {
-        auto projection_onto_this =
-            ((end_ - begin_) * DotProduct(end - end_, end_ - begin_)) /
-            DistanceSquared(end_, begin_);
-        auto projection_onto_next =
-            ((next_->end_ - next_->begin_) *
-             DotProduct(end - end_, next_->end_ - next_->begin_)) /
-            DistanceSquared(next_->end_, next_->begin_);
-        SetBegin(begin_ + projection_onto_next);
-        next_->SetEnd(next_->end_ + projection_onto_this);
+        constrained_edge_->SetPerpendicularByBegin(this);
+        next_->SetBegin(end_);
       }
       break;
     case Constraint::EQUAL_LENGTH: {
       end_ = end;
       if (prev_ == constrained_edge_) {
-        constrained_edge_->SetLengthByEnd(
-            std::sqrt(DistanceSquared(begin_, end_)));
+        constrained_edge_->SetLengthByBegin(Length());
         next_->SetBegin(end_);
       } else if (next_ == constrained_edge_) {
         next_->begin_ = end;
-        constrained_edge_->SetLengthByEnd(
-            std::sqrt(DistanceSquared(begin_, end_)));
+        constrained_edge_->SetLengthByEnd(Length());
       } else {
-        constrained_edge_->SetLengthByEnd(
-            std::sqrt(DistanceSquared(begin_, end_)));
+        constrained_edge_->SetLengthByEnd(Length());
         next_->SetBegin(end_);
       }
     } break;
@@ -500,6 +516,7 @@ void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector) {
   if (vector == DrawingBoard::Point2d{0, 0})
     return;
   switch (constraint_) {
+    case Constraint::PERPENDICULAR:
     case Constraint::EQUAL_LENGTH:
     case Constraint::NONE:
       begin_ = begin_ + vector;
@@ -507,54 +524,38 @@ void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector) {
       prev_->SetEnd(begin_);
       next_->SetBegin(end_);
       break;
-    case Constraint::PERPENDICULAR: {
-      if (next_ == constrained_edge_) {
-        const auto projection_onto_this =
-            ((end_ - begin_) * DotProduct(vector, end_ - begin_)) /
-            DistanceSquared(end_, begin_);
-        const auto projection_onto_next =
-            ((next_->end_ - next_->begin_) *
-             DotProduct(vector, next_->end_ - next_->begin_)) /
-            DistanceSquared(next_->end_, next_->begin_);
-        SetEnd(end_ + projection_onto_this);
-        SetBegin(begin_ + projection_onto_this);
-        next_->SetBegin(next_->begin_ + projection_onto_next);
-      } else {
-        const auto projection_onto_this =
-            ((end_ - begin_) * DotProduct(vector, end_ - begin_)) /
-            DistanceSquared(end_, begin_);
-        const auto projection_onto_prev =
-            ((prev_->end_ - prev_->begin_) *
-             DotProduct(vector, prev_->end_ - prev_->begin_)) /
-            DistanceSquared(prev_->end_, prev_->begin_);
-        SetEnd(end_ + projection_onto_this);
-        SetBegin(begin_ + projection_onto_this);
-        prev_->SetEnd(prev_->end_ + projection_onto_prev);
-      }
-    } break;
   }
 }
 
-// WARNING: edge MUST BE A NEIGHBOUR OF this.
 bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge) {
   if (constraint_ != Constraint::NONE ||
       edge->constraint_ != Constraint::NONE || constrained_edge_ ||
       edge->constrained_edge_)
     return false;
-  if (edge->Next() != this)
-    return edge->SetPerpendicular(this);
-  const auto circle_center = (end_ + edge->begin_) / 2;
-  if (begin_ == circle_center) {
-    begin_ = edge->end_ = (edge->begin_ + end_ * DrawingBoard::Point2d{0, 1}) /
-                          DrawingBoard::Point2d{0, 1};
+  if (edge->next_ == this || edge->prev_ == this) {
+    if (edge->next_ != this)
+      return edge->SetPerpendicular(this);
+    constraint_ = edge->constraint_ = Constraint::PERPENDICULAR;
+    constrained_edge_ = edge;
+    edge->constrained_edge_ = this;
+    constraint_id_ = edge->constraint_id_ = id_manager::Get();
+    const auto circle_center = (end_ + edge->begin_) / 2;
+    if (begin_ == circle_center) {
+      begin_ = edge->end_ =
+          (edge->begin_ + end_ * DrawingBoard::Point2d{0, 1}) /
+          DrawingBoard::Point2d{0, 1};
+    } else {
+      begin_ = edge->end_ = ClosestPointOnCircle(
+          circle_center, std::sqrt(DistanceSquared(end_, circle_center)),
+          begin_);
+    }
   } else {
-    begin_ = edge->end_ = ClosestPointOnCircle(
-        circle_center, std::sqrt(DistanceSquared(end_, circle_center)), begin_);
+    constraint_ = edge->constraint_ = Constraint::PERPENDICULAR;
+    constrained_edge_ = edge;
+    edge->constrained_edge_ = this;
+    constraint_id_ = edge->constraint_id_ = id_manager::Get();
+    edge->SetPerpendicularByBegin(this);
   }
-  constraint_ = edge->constraint_ = Constraint::PERPENDICULAR;
-  constrained_edge_ = edge;
-  edge->constrained_edge_ = this;
-  constraint_id_ = edge->constraint_id_ = id_manager::Get();
   return true;
 }
 
@@ -567,7 +568,7 @@ bool Polygon::PolygonEdge::SetEqualLength(PolygonEdge* edge) {
   constrained_edge_ = edge;
   edge->constrained_edge_ = this;
   constraint_id_ = edge->constraint_id_ = id_manager::Get();
-  edge->SetLengthByBegin(std::sqrt(DistanceSquared(begin_, end_)));
+  edge->SetLengthByBegin(Length());
   return true;
 }
 
@@ -585,7 +586,7 @@ void Polygon::PolygonEdge::RemoveConstraint() {
 
 void Polygon::PolygonEdge::SetLengthByBegin(double length) {
   auto vec = begin_ - end_;
-  vec = vec / std::sqrt(DistanceSquared(begin_, end_));
+  vec = vec / Length();
   if (length <= kMaxLength) {
     vec = vec * length;
     begin_ = end_ + vec;
@@ -598,7 +599,7 @@ void Polygon::PolygonEdge::SetLengthByBegin(double length) {
 
 void Polygon::PolygonEdge::SetLengthByEnd(double length) {
   auto vec = end_ - begin_;
-  vec = vec / std::sqrt(DistanceSquared(begin_, end_));
+  vec = vec / Length();
   if (length <= kMaxLength) {
     vec = vec * length;
     end_ = begin_ + vec;
@@ -606,6 +607,58 @@ void Polygon::PolygonEdge::SetLengthByEnd(double length) {
   } else {
     SetLengthByEnd(kMaxLength);
     constrained_edge_->SetLengthByBegin(kMaxLength);
+  }
+}
+
+void Polygon::PolygonEdge::SetPerpendicularByBegin(PolygonEdge* edge) {
+  auto vec = edge->end_ - edge->begin_;
+  vec = vec / std::sqrt(DistanceSquared(vec, {0, 0}));
+  vec = vec * Length();
+  vec = vec * DrawingBoard::Point2d{0, 1};
+  if (DistanceSquared(begin_, end_ + vec) < DistanceSquared(begin_, end_ - vec))
+    begin_ = end_ + vec;
+  else
+    begin_ = end_ - vec;
+  if (Colinear(begin_, end_, prev_->end_)) {
+    begin_ = prev_->end_;
+  } else {
+    if (prev_->constraint_ == Constraint::PERPENDICULAR) {
+      auto intersection = Intersect(begin_, end_, prev_->begin_, prev_->end_);
+      if (intersection.has_value()) {
+        begin_ = prev_->end_ = intersection.value();
+      } else {
+        RemoveConstraint();
+        SetBegin(prev_->end_);
+      }
+    } else {
+      prev_->SetEnd(begin_);
+    }
+  }
+}
+
+void Polygon::PolygonEdge::SetPerpendicularByEnd(PolygonEdge* edge) {
+  auto vec = edge->end_ - edge->begin_;
+  vec = vec / std::sqrt(DistanceSquared(vec, {0, 0}));
+  vec = vec * Length();
+  vec = vec * DrawingBoard::Point2d{0, 1};
+  if (DistanceSquared(end_, begin_ + vec) < DistanceSquared(end_, begin_ - vec))
+    end_ = begin_ + vec;
+  else
+    end_ = begin_ - vec;
+  if (Colinear(begin_, end_, next_->begin_)) {
+    end_ = next_->begin_;
+  } else {
+    if (next_->constraint_ == Constraint::PERPENDICULAR) {
+      auto intersection = Intersect(begin_, end_, next_->begin_, next_->end_);
+      if (intersection.has_value()) {
+        end_ = next_->begin_ = intersection.value();
+      } else {
+        RemoveConstraint();
+        SetBegin(next_->begin_);
+      }
+    } else {
+      next_->SetBegin(end_);
+    }
   }
 }
 }  // namespace gk
