@@ -178,6 +178,8 @@ std::unique_ptr<Polygon> Polygon::CreateSamplePolygon() {
   edge[6]->constraint_ = PolygonEdge::Constraint::NONE;
   edge[6]->constraint_id_ = 0;
   edge[6]->constrained_edge_ = nullptr;
+
+  ret->nverticies_ = 7;
   return ret;
 }
 
@@ -190,6 +192,7 @@ std::unique_ptr<Polygon> Polygon::Create(DrawingBoard::Point2d const& p1,
   ret->body_ = std::make_unique<PolygonEdge>(p1, p2, edge_color, vertex_color);
   ret->body_->AddAfter(new PolygonEdge(p2, p3, edge_color, vertex_color));
   ret->body_->AddBefore(new PolygonEdge(p3, p1, edge_color, vertex_color));
+  ret->nverticies_ = 3;
   return ret;
 }
 
@@ -227,7 +230,8 @@ bool Polygon::OnMouseMove(DrawingBoard* drawing_board,
     return body_->MoveWhole(mouse_pos, drawing_board->GetPreviousMousePos());
   auto* ptr = body_.get();
   do {
-    if (ptr->OnMouseMove(mouse_pos, drawing_board->GetPreviousMousePos()))
+    if (ptr->OnMouseMove(mouse_pos, drawing_board->GetPreviousMousePos(),
+                         3 * nverticies_))
       return true;
   } while ((ptr = ptr->Next()) != body_.get());
   return false;
@@ -243,8 +247,10 @@ void Polygon::OnControllerStateChanged(PolygonController* controller) {
 bool Polygon::AddVertex(DrawingBoard::Point2d const& pos) {
   auto* ptr = body_.get();
   while ((ptr = ptr->Next()) != body_.get())
-    if (ptr->Split(pos))
+    if (ptr->Split(pos)) {
+      ++nverticies_;
       return true;
+    }
   return body_->Split(pos);
 }
 
@@ -252,7 +258,8 @@ bool Polygon::Remove(DrawingBoard::Point2d const& point) {
   auto* ptr = body_.get();
   auto* head = body_.get();
   do {
-    if (ptr->Remove(point, &head)) {
+    if (ptr->Remove(point, &head, 3 * nverticies_)) {
+      --nverticies_;
       body_.release();
       body_.reset(head);
       if (body_->Next()->Next() == body_.get())
@@ -279,7 +286,7 @@ bool Polygon::SetPerpendicular(DrawingBoard::Point2d const& p1,
   } while ((ptr = ptr->Next()) != body_.get());
   if (!e1 || !e2 || e1 == e2)
     return false;
-  return e1->SetPerpendicular(e2);
+  return e1->SetPerpendicular(e2, 3 * nverticies_);
 }
 
 bool Polygon::SetEqualLength(DrawingBoard::Point2d const& p1,
@@ -298,7 +305,7 @@ bool Polygon::SetEqualLength(DrawingBoard::Point2d const& p1,
   } while ((ptr = ptr->Next()) != body_.get());
   if (!e1 || !e2 || e1 == e2)
     return false;
-  return e1->SetEqualLength(e2);
+  return e1->SetEqualLength(e2, 3 * nverticies_);
 }
 
 Polygon::PolygonEdge::~PolygonEdge() {
@@ -443,16 +450,17 @@ bool Polygon::PolygonEdge::OnMouseLButtonUp(
 
 bool Polygon::PolygonEdge::OnMouseMove(
     DrawingBoard::Point2d const& mouse_pos,
-    DrawingBoard::Point2d const& prev_mouse_pos) {
+    DrawingBoard::Point2d const& prev_mouse_pos,
+    int max_calls) {
   if (is_clicked_) {
     if (mouse_pos == prev_mouse_pos)
       return true;
     if (is_edge_clicked_) {
-      MoveByVector(mouse_pos - prev_mouse_pos);
+      MoveByVector(mouse_pos - prev_mouse_pos, max_calls);
     } else if (begin_clicked_) {
-      SetBegin(mouse_pos);
+      SetBegin(mouse_pos, max_calls);
     } else {
-      SetEnd(mouse_pos);
+      SetEnd(mouse_pos, max_calls);
     }
     return true;
   }
@@ -503,11 +511,12 @@ bool Polygon::PolygonEdge::Split(DrawingBoard::Point2d const& mouse_pos) {
 }
 
 bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
-                                  PolygonEdge** head) {
+                                  PolygonEdge** head,
+                                  int max_calls) {
   if (DistanceSquared(end_, point) < kMinDistanceFromVertexSquared) {
     RemoveConstraint();
     next_->prev_ = prev_;
-    next_->SetBegin(begin_);
+    next_->SetBegin(begin_, max_calls - 1);
     prev_->next_ = next_;
     if (*head == this)
       *head = next_;
@@ -522,20 +531,22 @@ bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
   }
   return false;
 }
-void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
+void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin,
+                                    int max_calls) {
   if (begin_ == begin)
     return;
-
+  if (max_calls < 0)
+    RemoveConstraint();
   switch (constraint_) {
     case Constraint::NONE:
       begin_ = begin;
-      prev_->SetEnd(begin_);
+      prev_->SetEnd(begin_, max_calls - 1);
       break;
     case Constraint::PERPENDICULAR:
       if (next_ == constrained_edge_) {
         begin_ = begin;
-        constrained_edge_->SetPerpendicularByEnd(this);
-        prev_->SetEnd(begin_);
+        constrained_edge_->SetPerpendicularByEnd(this, max_calls - 1);
+        prev_->SetEnd(begin_, max_calls - 1);
       } else if (prev_ == constrained_edge_) {
         auto projection_onto_this =
             ((end_ - begin_) * DotProduct(begin - begin_, end_ - begin_)) /
@@ -545,46 +556,48 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
              DotProduct(begin - begin_, prev_->end_ - prev_->begin_)) /
             DistanceSquared(prev_->end_, prev_->begin_);
         prev_->end_ = begin_ = begin_ + projection_onto_this;
-        prev_->SetPerpendicularByBegin(this);
+        prev_->SetPerpendicularByBegin(this, max_calls - 1);
         end_ = end_ + projection_onto_prev;
         prev_->end_ = begin_ = begin_ + projection_onto_prev;
-        SetPerpendicularByEnd(prev_);
+        SetPerpendicularByEnd(prev_, max_calls - 1);
       } else {
         begin_ = begin;
-        constrained_edge_->SetPerpendicularByEnd(this);
-        prev_->SetEnd(begin_);
+        constrained_edge_->SetPerpendicularByEnd(this, max_calls - 1);
+        prev_->SetEnd(begin_, max_calls - 1);
       }
       break;
     case Constraint::EQUAL_LENGTH: {
       begin_ = begin;
       if (next_ == constrained_edge_) {
-        constrained_edge_->SetLengthByEnd(Length());
-        prev_->SetEnd(begin_);
+        constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
+        prev_->SetEnd(begin_, max_calls - 1);
       } else if (prev_ == constrained_edge_) {
         prev_->end_ = begin;
-        constrained_edge_->SetLengthByBegin(Length());
+        constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
       } else {
-        constrained_edge_->SetLengthByBegin(Length());
-        prev_->SetEnd(begin_);
+        constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
+        prev_->SetEnd(begin_, max_calls - 1);
       }
     } break;
   }
 }
 
-void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
+void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end,
+                                  int max_calls) {
   if (end == end_)
     return;
-
+  if (max_calls < 0)
+    RemoveConstraint();
   switch (constraint_) {
     case Constraint::NONE:
       end_ = end;
-      next_->SetBegin(end_);
+      next_->SetBegin(end_, max_calls - 1);
       break;
     case Constraint::PERPENDICULAR:
       if (prev_ == constrained_edge_) {
         end_ = end;
-        constrained_edge_->SetPerpendicularByBegin(this);
-        next_->SetBegin(end_);
+        constrained_edge_->SetPerpendicularByBegin(this, max_calls - 1);
+        next_->SetBegin(end_, max_calls - 1);
       } else if (next_ == constrained_edge_) {
         auto projection_onto_this =
             ((end_ - begin_) * DotProduct(end - end_, end_ - begin_)) /
@@ -594,33 +607,34 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
              DotProduct(end - end_, next_->end_ - next_->begin_)) /
             DistanceSquared(next_->end_, next_->begin_);
         next_->begin_ = end_ = end_ + projection_onto_this;
-        next_->SetPerpendicularByEnd(this);
+        next_->SetPerpendicularByEnd(this, max_calls - 1);
         begin_ = begin_ + projection_onto_next;
         next_->begin_ = end_ = end_ + projection_onto_next;
-        SetPerpendicularByBegin(next_);
+        SetPerpendicularByBegin(next_, max_calls - 1);
       } else {
         end_ = end;
-        constrained_edge_->SetPerpendicularByBegin(this);
-        next_->SetBegin(end_);
+        constrained_edge_->SetPerpendicularByBegin(this, max_calls - 1);
+        next_->SetBegin(end_, max_calls - 1);
       }
       break;
     case Constraint::EQUAL_LENGTH: {
       end_ = end;
       if (prev_ == constrained_edge_) {
-        constrained_edge_->SetLengthByBegin(Length());
-        next_->SetBegin(end_);
+        constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
+        next_->SetBegin(end_, max_calls - 1);
       } else if (next_ == constrained_edge_) {
         next_->begin_ = end;
-        constrained_edge_->SetLengthByEnd(Length());
+        constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
       } else {
-        constrained_edge_->SetLengthByEnd(Length());
-        next_->SetBegin(end_);
+        constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
+        next_->SetBegin(end_, max_calls - 1);
       }
     } break;
   }
 }
 
-void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector) {
+void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector,
+                                        int max_calls) {
   if (vector == DrawingBoard::Point2d{0, 0})
     return;
   switch (constraint_) {
@@ -629,20 +643,20 @@ void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector) {
     case Constraint::NONE:
       begin_ = begin_ + vector;
       end_ = end_ + vector;
-      next_->SetBegin(end_);
-      prev_->SetEnd(begin_);
+      next_->SetBegin(end_, max_calls - 1);
+      prev_->SetEnd(begin_, max_calls - 1);
       break;
   }
 }
 
-bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge) {
+bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge, int max_calls) {
   if (constraint_ != Constraint::NONE ||
       edge->constraint_ != Constraint::NONE || constrained_edge_ ||
       edge->constrained_edge_)
     return false;
   if (edge->next_ == this || edge->prev_ == this) {
     if (edge->next_ != this)
-      return edge->SetPerpendicular(this);
+      return edge->SetPerpendicular(this, max_calls - 1);
     constraint_ = edge->constraint_ = Constraint::PERPENDICULAR;
     constrained_edge_ = edge;
     edge->constrained_edge_ = this;
@@ -662,12 +676,12 @@ bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge) {
     constrained_edge_ = edge;
     edge->constrained_edge_ = this;
     constraint_id_ = edge->constraint_id_ = id_manager::Get();
-    edge->SetPerpendicularByBegin(this);
+    edge->SetPerpendicularByBegin(this, max_calls);
   }
   return true;
 }
 
-bool Polygon::PolygonEdge::SetEqualLength(PolygonEdge* edge) {
+bool Polygon::PolygonEdge::SetEqualLength(PolygonEdge* edge, int max_calls) {
   if (constraint_ != Constraint::NONE ||
       edge->constraint_ != Constraint::NONE || constrained_edge_ ||
       edge->constrained_edge_)
@@ -676,7 +690,7 @@ bool Polygon::PolygonEdge::SetEqualLength(PolygonEdge* edge) {
   constrained_edge_ = edge;
   edge->constrained_edge_ = this;
   constraint_id_ = edge->constraint_id_ = id_manager::Get();
-  edge->SetLengthByBegin(Length());
+  edge->SetLengthByBegin(Length(), max_calls);
   return true;
 }
 
@@ -692,7 +706,7 @@ void Polygon::PolygonEdge::RemoveConstraint() {
   }
 }
 
-void Polygon::PolygonEdge::SetLengthByBegin(double length) {
+void Polygon::PolygonEdge::SetLengthByBegin(double length, int max_calls) {
   if (std::abs(length * length - DistanceSquared(begin_, end_)) <
       kVerySmallValue)
     return;
@@ -707,10 +721,10 @@ void Polygon::PolygonEdge::SetLengthByBegin(double length) {
       return;
     }
   }
-  prev_->SetEnd(begin_);
+  prev_->SetEnd(begin_, max_calls - 1);
 }
 
-void Polygon::PolygonEdge::SetLengthByEnd(double length) {
+void Polygon::PolygonEdge::SetLengthByEnd(double length, int max_calls) {
   if (std::abs(length * length - DistanceSquared(begin_, end_)) <
       kVerySmallValue)
     return;
@@ -725,10 +739,11 @@ void Polygon::PolygonEdge::SetLengthByEnd(double length) {
       return;
     }
   }
-  next_->SetBegin(end_);
+  next_->SetBegin(end_, max_calls - 1);
 }
 
-void Polygon::PolygonEdge::SetPerpendicularByBegin(PolygonEdge* edge) {
+void Polygon::PolygonEdge::SetPerpendicularByBegin(PolygonEdge* edge,
+                                                   int max_calls) {
   auto vec = edge->end_ - edge->begin_;
   vec = vec / std::sqrt(DistanceSquared(vec, {0, 0}));
   vec = vec * Length();
@@ -747,15 +762,16 @@ void Polygon::PolygonEdge::SetPerpendicularByBegin(PolygonEdge* edge) {
         begin_ = prev_->end_ = intersection.value();
       } else {
         RemoveConstraint();
-        SetBegin(prev_->end_);
+        SetBegin(prev_->end_, max_calls - 1);
       }
     } else {
-      prev_->SetEnd(begin_);
+      prev_->SetEnd(begin_, max_calls - 1);
     }
   }
 }
 
-void Polygon::PolygonEdge::SetPerpendicularByEnd(PolygonEdge* edge) {
+void Polygon::PolygonEdge::SetPerpendicularByEnd(PolygonEdge* edge,
+                                                 int max_calls) {
   auto vec = edge->end_ - edge->begin_;
   vec = vec / std::sqrt(DistanceSquared(vec, {0, 0}));
   vec = vec * Length();
@@ -774,10 +790,10 @@ void Polygon::PolygonEdge::SetPerpendicularByEnd(PolygonEdge* edge) {
         end_ = next_->begin_ = intersection.value();
       } else {
         RemoveConstraint();
-        SetBegin(next_->begin_);
+        SetBegin(next_->begin_, max_calls - 1);
       }
     } else {
-      next_->SetBegin(end_);
+      next_->SetBegin(end_, max_calls - 1);
     }
   }
 }

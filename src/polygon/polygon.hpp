@@ -57,25 +57,28 @@ class Polygon {
     bool OnMouseLButtonDown(DrawingBoard::Point2d const& mouse_pos);
     bool OnMouseLButtonUp(DrawingBoard::Point2d const& mouse_pos);
     bool OnMouseMove(DrawingBoard::Point2d const& mouse_pos,
-                     DrawingBoard::Point2d const& prev_mouse_pos);
+                     DrawingBoard::Point2d const& prev_mouse_pos,
+                     int max_calls);
     bool MoveWhole(DrawingBoard::Point2d const& mouse_pos,
                    DrawingBoard::Point2d const& prev_mouse_pos);
     void OnControllerStateChanged(PolygonController* controller);
     bool Split(DrawingBoard::Point2d const& mouse_pos);
-    bool Remove(DrawingBoard::Point2d const& point, PolygonEdge** head);
-    void SetBegin(DrawingBoard::Point2d const& begin);
-    void SetEnd(DrawingBoard::Point2d const& end);
-    void MoveByVector(DrawingBoard::Point2d const& vector);
+    bool Remove(DrawingBoard::Point2d const& point,
+                PolygonEdge** head,
+                int max_calls);
+    void SetBegin(DrawingBoard::Point2d const& begin, int max_calls);
+    void SetEnd(DrawingBoard::Point2d const& end, int max_calls);
+    void MoveByVector(DrawingBoard::Point2d const& vector, int max_calls);
 
-    bool SetPerpendicular(PolygonEdge* edge);
-    bool SetEqualLength(PolygonEdge* edge);
+    bool SetPerpendicular(PolygonEdge* edge, int max_calls);
+    bool SetEqualLength(PolygonEdge* edge, int max_calls);
     void RemoveConstraint();
 
    private:
-    void SetLengthByBegin(double length);
-    void SetLengthByEnd(double length);
-    void SetPerpendicularByBegin(PolygonEdge* edge);
-    void SetPerpendicularByEnd(PolygonEdge* edge);
+    void SetLengthByBegin(double length, int max_calls);
+    void SetLengthByEnd(double length, int max_calls);
+    void SetPerpendicularByBegin(PolygonEdge* edge, int max_calls);
+    void SetPerpendicularByEnd(PolygonEdge* edge, int max_calls);
 
     enum class Constraint {
       NONE,
@@ -97,5 +100,6 @@ class Polygon {
   };
 
   std::unique_ptr<PolygonEdge> body_;
+  unsigned int nverticies_ = 0;
 };
 }  // namespace gk
