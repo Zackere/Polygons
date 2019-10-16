@@ -6,6 +6,7 @@
 #undef max
 
 #include <algorithm>
+#include <numeric>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -16,7 +17,8 @@ constexpr double kMinDistanceFromVertexSquared = 6;
 constexpr double kMinDistanceFromEdgeSquared = 6;
 constexpr wchar_t kUpTack[] = {8869};
 constexpr wchar_t kEqualSign[] = L"=";
-constexpr double kMaxLength = 1000;
+constexpr double kVerySmallValue = 0.001;
+constexpr unsigned int kMaxIters = 100;
 
 double DistanceSquared(DrawingBoard::Point2d const& from,
                        DrawingBoard::Point2d const& to) {
@@ -72,7 +74,7 @@ bool Colinear(DrawingBoard::Point2d const& p1,
          DrawingBoard::Point2d::kVerySmallValue;
 }
 
-std::optional<DrawingBoard::Point2d> Intersect(
+std::optional<DrawingBoard::Point2d> IntersectLines(
     DrawingBoard::Point2d const& A1,
     DrawingBoard::Point2d const& A2,
     DrawingBoard::Point2d const& B1,
@@ -86,12 +88,33 @@ std::optional<DrawingBoard::Point2d> Intersect(
   double b2 = B1.x - B2.x;
   double c2 = a2 * B1.x + b2 * B1.y;
   double det = a1 * b2 - a2 * b1;
-  if (std::abs(det) < DrawingBoard::Point2d::kVerySmallValue) {
+  if (std::abs(det) < kVerySmallValue)
     return std::nullopt;
-  } else {
-    return DrawingBoard::Point2d{(b2 * c1 - b1 * c2) / det,
-                                 (a1 * c2 - a2 * c1) / det};
-  }
+  return DrawingBoard::Point2d{(b2 * c1 - b1 * c2) / det,
+                               (a1 * c2 - a2 * c1) / det};
+}
+
+std::optional<DrawingBoard::Point2d> ApproxCircleIntersection(
+    DrawingBoard::Point2d const& center1,
+    DrawingBoard::Point2d const& center2,
+    DrawingBoard::Point2d point1,
+    DrawingBoard::Point2d point2) {
+  const double r1 = std::sqrt(DistanceSquared(point1, center1));
+  const double r2 = std::sqrt(DistanceSquared(point2, center2));
+  if (r1 + r2 < std::sqrt(DistanceSquared(center1, center2)))
+    return std::nullopt;
+  else if (std::abs(r1 + r2 - std::sqrt(DistanceSquared(center1, center2))) <
+           kVerySmallValue)
+    return (center1 + center2) / 2;
+  unsigned int iter = 0;
+  do {
+    auto p1 = ClosestPointOnCircle(center2, r2, point1);
+    auto p2 = ClosestPointOnCircle(center1, r1, point2);
+    point1 = p2;
+    point2 = p1;
+  } while (DistanceSquared(point1, point2) < kVerySmallValue &&
+           ++iter < kMaxIters);
+  return point1;
 }
 }  // namespace
 std::unique_ptr<Polygon> Polygon::Create(DrawingBoard::Point2d const& p1,
@@ -360,13 +383,12 @@ bool Polygon::PolygonEdge::OnMouseMove(
   if (is_clicked_) {
     if (mouse_pos == prev_mouse_pos)
       return true;
-    const DrawingBoard::Point2d vector = mouse_pos - prev_mouse_pos;
     if (is_edge_clicked_) {
-      MoveByVector(vector);
+      MoveByVector(mouse_pos - prev_mouse_pos);
     } else if (begin_clicked_) {
-      SetBegin(begin_ + vector);
+      SetBegin(mouse_pos);
     } else {
-      SetEnd(end_ + vector);
+      SetEnd(mouse_pos);
     }
     return true;
   }
@@ -461,7 +483,7 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
         prev_->end_ = begin_ = begin_ + projection_onto_this;
         prev_->SetPerpendicularByBegin(this);
         end_ = end_ + projection_onto_prev;
-        prev_->end_ = begin_ + projection_onto_prev;
+        prev_->end_ = begin_ = begin_ + projection_onto_prev;
         SetPerpendicularByEnd(prev_);
       } else {
         begin_ = begin;
@@ -543,8 +565,8 @@ void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector) {
     case Constraint::NONE:
       begin_ = begin_ + vector;
       end_ = end_ + vector;
-      prev_->SetEnd(begin_);
       next_->SetBegin(end_);
+      prev_->SetEnd(begin_);
       break;
   }
 }
@@ -607,29 +629,39 @@ void Polygon::PolygonEdge::RemoveConstraint() {
 }
 
 void Polygon::PolygonEdge::SetLengthByBegin(double length) {
+  if (std::abs(length * length - DistanceSquared(begin_, end_)) <
+      kVerySmallValue)
+    return;
   auto vec = begin_ - end_;
   vec = vec / Length();
-  if (length <= kMaxLength) {
-    vec = vec * length;
-    begin_ = end_ + vec;
-    prev_->SetEnd(begin_);
-  } else {
-    SetLengthByBegin(kMaxLength);
-    constrained_edge_->SetLengthByEnd(kMaxLength);
+  vec = vec * length;
+  begin_ = end_ + vec;
+  if (prev_->constraint_ == Constraint::EQUAL_LENGTH) {
+    auto p = ApproxCircleIntersection(end_, prev_->begin_, begin_, prev_->end_);
+    if (p.has_value()) {
+      prev_->end_ = begin_ = p.value();
+      return;
+    }
   }
+  prev_->SetEnd(begin_);
 }
 
 void Polygon::PolygonEdge::SetLengthByEnd(double length) {
+  if (std::abs(length * length - DistanceSquared(begin_, end_)) <
+      kVerySmallValue)
+    return;
   auto vec = end_ - begin_;
   vec = vec / Length();
-  if (length <= kMaxLength) {
-    vec = vec * length;
-    end_ = begin_ + vec;
-    next_->SetBegin(end_);
-  } else {
-    SetLengthByEnd(kMaxLength);
-    constrained_edge_->SetLengthByBegin(kMaxLength);
+  vec = vec * length;
+  end_ = begin_ + vec;
+  if (next_->constraint_ == Constraint::EQUAL_LENGTH) {
+    auto p = ApproxCircleIntersection(begin_, next_->end_, end_, next_->begin_);
+    if (p.has_value()) {
+      next_->begin_ = end_ = p.value();
+      return;
+    }
   }
+  next_->SetBegin(end_);
 }
 
 void Polygon::PolygonEdge::SetPerpendicularByBegin(PolygonEdge* edge) {
@@ -645,7 +677,8 @@ void Polygon::PolygonEdge::SetPerpendicularByBegin(PolygonEdge* edge) {
     begin_ = prev_->end_;
   } else {
     if (prev_->constraint_ == Constraint::PERPENDICULAR) {
-      auto intersection = Intersect(begin_, end_, prev_->begin_, prev_->end_);
+      auto intersection =
+          IntersectLines(begin_, end_, prev_->begin_, prev_->end_);
       if (intersection.has_value()) {
         begin_ = prev_->end_ = intersection.value();
       } else {
@@ -671,7 +704,8 @@ void Polygon::PolygonEdge::SetPerpendicularByEnd(PolygonEdge* edge) {
     end_ = next_->begin_;
   } else {
     if (next_->constraint_ == Constraint::PERPENDICULAR) {
-      auto intersection = Intersect(begin_, end_, next_->begin_, next_->end_);
+      auto intersection =
+          IntersectLines(begin_, end_, next_->begin_, next_->end_);
       if (intersection.has_value()) {
         end_ = next_->begin_ = intersection.value();
       } else {

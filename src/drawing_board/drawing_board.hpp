@@ -24,8 +24,8 @@ class DrawingBoard {
     static constexpr double kVerySmallValue = 0.001;
     Point2d(Coordinate x, Coordinate y) : x(x), y(y) {}
     bool operator==(Point2d const& p) const {
-      return RelativeDifference(x, p.x) < kVerySmallValue &&
-             RelativeDifference(y, p.y) < kVerySmallValue;
+      return std::abs(x - p.x) < kVerySmallValue &&
+             std::abs(y - p.y) < kVerySmallValue;
     }
     Point2d operator-(Point2d const& p) const { return {x - p.x, y - p.y}; }
     Point2d operator+(Point2d const& p) const { return {x + p.x, y + p.y}; }
@@ -40,12 +40,6 @@ class DrawingBoard {
     }
     Coordinate x;
     Coordinate y;
-
-   private:
-    static double RelativeDifference(double a, double b) {
-      const auto d = std::max(std::abs(a), std::abs(b));
-      return d == 0.0 ? 0.0 : std::abs(a - b) / d;
-    }
   };
 
   static bool RegisterWindowClass(HINSTANCE hInstance);

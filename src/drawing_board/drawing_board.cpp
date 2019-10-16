@@ -190,7 +190,6 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
         Point2d pos =
             Point2d(LOWORD(lParam), HIWORD(lParam)) / window->GetPixelSize();
         window->OnMouseMove(pos);
-        window->last_mouse_pos_ = pos;
       }
       return 0;
     case WM_ERASEBKGND:
@@ -222,6 +221,7 @@ void DrawingBoard::OnMouseMove(Point2d const& mouse_pos) {
     Clear();
     Display();
   }
+  last_mouse_pos_ = mouse_pos;
 }
 
 void DrawingBoard::OnKeyDown(WPARAM key_code, bool was_down) {

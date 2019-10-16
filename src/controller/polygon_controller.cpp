@@ -76,7 +76,6 @@ bool PolygonController::OnMouseLButtonDoubleClick(
           last_click_.emplace(mouse_pos);
           return false;
         }
-        return true;
       }
       case State::SET_EQUAL_LENGTH: {
         if (last_click_.has_value()) {
@@ -92,7 +91,6 @@ bool PolygonController::OnMouseLButtonDoubleClick(
           last_click_.emplace(mouse_pos);
           return false;
         }
-        return true;
       }
     }
   }
@@ -117,7 +115,6 @@ bool PolygonController::OnKeyDown(DrawingBoard* board,
 }
 
 bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
-  State old_state = state_;
   switch (key_code) {
     case 'Q':
       SetState(State::FREE, board);
