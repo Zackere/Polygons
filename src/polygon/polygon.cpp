@@ -190,7 +190,7 @@ bool Polygon::SetPerpendicular(DrawingBoard::Point2d const& p1,
       e2 = ptr;
     }
   } while ((ptr = ptr->Next()) != body_.get());
-  if (!e1 || !e2 /* || !(e1->Next() == e2 || e2->Next() == e1) */ || e1 == e2)
+  if (!e1 || !e2 || e1 == e2)
     return false;
   return e1->SetPerpendicular(e2);
 }
@@ -209,7 +209,7 @@ bool Polygon::SetEqualLength(DrawingBoard::Point2d const& p1,
       e2 = ptr;
     }
   } while ((ptr = ptr->Next()) != body_.get());
-  if (!e1 || !e2 /* || !(e1->Next() != e2 && e2->Next() != e1) */ || e1 == e2)
+  if (!e1 || !e2 || e1 == e2)
     return false;
   return e1->SetEqualLength(e2);
 }
