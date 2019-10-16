@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace gk {
 namespace {
@@ -117,6 +118,69 @@ std::optional<DrawingBoard::Point2d> ApproxCircleIntersection(
   return point1;
 }
 }  // namespace
+std::unique_ptr<Polygon> Polygon::CreateSamplePolygon() {
+  constexpr COLORREF edge_color = RGB(0, 255, 0);
+  constexpr COLORREF vertex_color = RGB(255, 0, 0);
+  std::vector<double> x{262.0, 290.0, 170.0, 197.0, 90.0, 11.0, 86.0};
+  std::vector<double> y{279.0, 222.0, 198.0, 59.0, 5.0, 110.0, 278.0};
+  auto ret = std::make_unique<Polygon>();
+  PolygonEdge* edge[] = {
+      new PolygonEdge(DrawingBoard::Point2d{x[0], y[0]},
+                      DrawingBoard::Point2d{x[1], y[1]}, edge_color,
+                      vertex_color),
+      new PolygonEdge(DrawingBoard::Point2d{x[1], y[1]},
+                      DrawingBoard::Point2d{x[2], y[2]}, edge_color,
+                      vertex_color),
+      new PolygonEdge(DrawingBoard::Point2d{x[2], y[2]},
+                      DrawingBoard::Point2d{x[3], y[3]}, edge_color,
+                      vertex_color),
+      new PolygonEdge(DrawingBoard::Point2d{x[3], y[3]},
+                      DrawingBoard::Point2d{x[4], y[4]}, edge_color,
+                      vertex_color),
+      new PolygonEdge(DrawingBoard::Point2d{x[4], y[4]},
+                      DrawingBoard::Point2d{x[5], y[5]}, edge_color,
+                      vertex_color),
+      new PolygonEdge(DrawingBoard::Point2d{x[5], y[5]},
+                      DrawingBoard::Point2d{x[6], y[6]}, edge_color,
+                      vertex_color),
+      new PolygonEdge(DrawingBoard::Point2d{x[6], y[6]},
+                      DrawingBoard::Point2d{x[0], y[0]}, edge_color,
+                      vertex_color),
+  };
+  ret->body_.reset(edge[0]);
+  for (int i = 1; i < 7; ++i)
+    ret->body_->AddBefore(edge[i]);
+
+  edge[0]->constraint_ = PolygonEdge::Constraint::PERPENDICULAR;
+  edge[0]->constraint_id_ = id_manager::Get();
+  edge[0]->constrained_edge_ = edge[3];
+
+  edge[1]->constraint_ = PolygonEdge::Constraint::PERPENDICULAR;
+  edge[1]->constraint_id_ = id_manager::Get();
+  edge[1]->constrained_edge_ = edge[2];
+
+  edge[2]->constraint_ = edge[1]->constraint_;
+  edge[2]->constraint_id_ = edge[1]->constraint_id_;
+  edge[2]->constrained_edge_ = edge[1];
+
+  edge[3]->constraint_ = edge[0]->constraint_;
+  edge[3]->constraint_id_ = edge[0]->constraint_id_;
+  edge[3]->constrained_edge_ = edge[0];
+
+  edge[4]->constraint_ = PolygonEdge::Constraint::EQUAL_LENGTH;
+  edge[4]->constraint_id_ = id_manager::Get();
+  edge[4]->constrained_edge_ = edge[5];
+
+  edge[5]->constraint_ = edge[4]->constraint_;
+  edge[5]->constraint_id_ = edge[4]->constraint_id_;
+  edge[5]->constrained_edge_ = edge[4];
+
+  edge[6]->constraint_ = PolygonEdge::Constraint::NONE;
+  edge[6]->constraint_id_ = 0;
+  edge[6]->constrained_edge_ = nullptr;
+  return ret;
+}
+
 std::unique_ptr<Polygon> Polygon::Create(DrawingBoard::Point2d const& p1,
                                          DrawingBoard::Point2d const& p2,
                                          DrawingBoard::Point2d const& p3,

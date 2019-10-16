@@ -134,6 +134,9 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
     case 'D':
       SetState(State::PURE_DESTRUCTION, board);
       break;
+    case VK_SPACE:
+      polygons_.insert(Polygon::CreateSamplePolygon());
+      break;
   }
   return false;
 }

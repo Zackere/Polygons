@@ -14,6 +14,7 @@ class PolygonController;
 
 class Polygon {
  public:
+  static std::unique_ptr<Polygon> CreateSamplePolygon();
   static std::unique_ptr<Polygon> Create(DrawingBoard::Point2d const& p1,
                                          DrawingBoard::Point2d const& p2,
                                          DrawingBoard::Point2d const& p3,
@@ -39,6 +40,7 @@ class Polygon {
  private:
   class PolygonEdge {
    public:
+    friend std::unique_ptr<Polygon> Polygon::CreateSamplePolygon();
     ~PolygonEdge();
     PolygonEdge(DrawingBoard::Point2d const& begin,
                 DrawingBoard::Point2d const& end,
