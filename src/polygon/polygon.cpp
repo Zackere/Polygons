@@ -446,14 +446,25 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin) {
       prev_->SetEnd(begin_);
       break;
     case Constraint::PERPENDICULAR:
-      begin_ = begin;
       if (next_ == constrained_edge_) {
+        begin_ = begin;
         constrained_edge_->SetPerpendicularByEnd(this);
         prev_->SetEnd(begin_);
       } else if (prev_ == constrained_edge_) {
-        prev_->end_ = begin;
-        constrained_edge_->SetPerpendicularByBegin(this);
+        auto projection_onto_this =
+            ((end_ - begin_) * DotProduct(begin - begin_, end_ - begin_)) /
+            DistanceSquared(end_, begin_);
+        auto projection_onto_prev =
+            ((prev_->end_ - prev_->begin_) *
+             DotProduct(begin - begin_, prev_->end_ - prev_->begin_)) /
+            DistanceSquared(prev_->end_, prev_->begin_);
+        prev_->end_ = begin_ = begin_ + projection_onto_this;
+        prev_->SetPerpendicularByBegin(this);
+        end_ = end_ + projection_onto_prev;
+        prev_->end_ = begin_ + projection_onto_prev;
+        SetPerpendicularByEnd(prev_);
       } else {
+        begin_ = begin;
         constrained_edge_->SetPerpendicularByEnd(this);
         prev_->SetEnd(begin_);
       }
@@ -484,14 +495,25 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end) {
       next_->SetBegin(end_);
       break;
     case Constraint::PERPENDICULAR:
-      end_ = end;
       if (prev_ == constrained_edge_) {
+        end_ = end;
         constrained_edge_->SetPerpendicularByBegin(this);
         next_->SetBegin(end_);
       } else if (next_ == constrained_edge_) {
-        next_->begin_ = end_;
-        constrained_edge_->SetPerpendicularByEnd(this);
+        auto projection_onto_this =
+            ((end_ - begin_) * DotProduct(end - end_, end_ - begin_)) /
+            DistanceSquared(end_, begin_);
+        auto projection_onto_next =
+            ((next_->end_ - next_->begin_) *
+             DotProduct(end - end_, next_->end_ - next_->begin_)) /
+            DistanceSquared(next_->end_, next_->begin_);
+        next_->begin_ = end_ = end_ + projection_onto_this;
+        next_->SetPerpendicularByEnd(this);
+        begin_ = begin_ + projection_onto_next;
+        next_->begin_ = end_ = end_ + projection_onto_next;
+        SetPerpendicularByBegin(next_);
       } else {
+        end_ = end;
         constrained_edge_->SetPerpendicularByBegin(this);
         next_->SetBegin(end_);
       }
