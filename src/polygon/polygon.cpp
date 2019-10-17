@@ -6,6 +6,7 @@
 #undef max
 
 #include <algorithm>
+#include <map>
 #include <numeric>
 #include <optional>
 #include <string>
@@ -95,55 +96,57 @@ std::optional<DrawingBoard::Point2d> IntersectLines(
                                (a1 * c2 - a2 * c1) / det};
 }
 
-std::optional<DrawingBoard::Point2d> ApproxCircleIntersection(
-    DrawingBoard::Point2d const& center1,
-    DrawingBoard::Point2d const& center2,
-    DrawingBoard::Point2d point1,
-    DrawingBoard::Point2d point2) {
-  const double r1 = std::sqrt(DistanceSquared(point1, center1));
-  const double r2 = std::sqrt(DistanceSquared(point2, center2));
-  if (r1 + r2 < std::sqrt(DistanceSquared(center1, center2)))
-    return std::nullopt;
-  else if (std::abs(r1 + r2 - std::sqrt(DistanceSquared(center1, center2))) <
-           kVerySmallValue)
-    return (center1 + center2) / 2;
-  unsigned int iter = 0;
-  do {
-    auto p1 = ClosestPointOnCircle(center2, r2, point1);
-    auto p2 = ClosestPointOnCircle(center1, r1, point2);
-    point1 = p2;
-    point2 = p1;
-  } while (DistanceSquared(point1, point2) < kVerySmallValue &&
-           ++iter < kMaxIters);
-  return point1;
+auto CircleIntersection(DrawingBoard::Point2d const& center1,
+                        DrawingBoard::Point2d const& center2,
+                        DrawingBoard::Point2d const& point1,
+                        DrawingBoard::Point2d const& point2) {
+  struct Result {
+    DrawingBoard::Point2d p1, p2;
+  };
+  std::optional<Result> result;
+  const auto r1 = std::sqrt(DistanceSquared(center1, point1)),
+             r2 = std::sqrt(DistanceSquared(center2, point2)),
+             d = std::sqrt(DistanceSquared(center1, center2));
+  if (d > r1 + r2 || d < std::abs(r1 - r2))
+    return result;
+
+  const auto e = (center2 - center1) / d;
+  const auto x = (r1 * r1 - r2 * r2 + d * d) / (2 * d),
+             y = std::sqrt(r1 * r1 - x * x);
+  result = Result{DrawingBoard::Point2d{center1.x + x * e.x - y * e.y,
+                                        center1.y + x * e.y + y * e.x},
+                  DrawingBoard::Point2d{center1.x + x * e.x + y * e.y,
+                                        center1.y + x * e.y - y * e.x}};
+  return result;
 }
 }  // namespace
-std::unique_ptr<Polygon> Polygon::CreateSamplePolygon() {
+std::unique_ptr<Polygon> Polygon::CreateSamplePolygon(
+    DrawingBoard* drawing_board) {
   constexpr COLORREF edge_color = RGB(0, 255, 0);
   constexpr COLORREF vertex_color = RGB(255, 0, 0);
   std::vector<double> x{262.0, 290.0, 170.0, 197.0, 90.0, 11.0, 86.0};
   std::vector<double> y{279.0, 222.0, 198.0, 59.0, 5.0, 110.0, 278.0};
   auto ret = std::make_unique<Polygon>();
   PolygonEdge* edge[] = {
-      new PolygonEdge(DrawingBoard::Point2d{x[0], y[0]},
+      new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[0], y[0]},
                       DrawingBoard::Point2d{x[1], y[1]}, edge_color,
                       vertex_color),
-      new PolygonEdge(DrawingBoard::Point2d{x[1], y[1]},
+      new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[1], y[1]},
                       DrawingBoard::Point2d{x[2], y[2]}, edge_color,
                       vertex_color),
-      new PolygonEdge(DrawingBoard::Point2d{x[2], y[2]},
+      new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[2], y[2]},
                       DrawingBoard::Point2d{x[3], y[3]}, edge_color,
                       vertex_color),
-      new PolygonEdge(DrawingBoard::Point2d{x[3], y[3]},
+      new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[3], y[3]},
                       DrawingBoard::Point2d{x[4], y[4]}, edge_color,
                       vertex_color),
-      new PolygonEdge(DrawingBoard::Point2d{x[4], y[4]},
+      new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[4], y[4]},
                       DrawingBoard::Point2d{x[5], y[5]}, edge_color,
                       vertex_color),
-      new PolygonEdge(DrawingBoard::Point2d{x[5], y[5]},
+      new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[5], y[5]},
                       DrawingBoard::Point2d{x[6], y[6]}, edge_color,
                       vertex_color),
-      new PolygonEdge(DrawingBoard::Point2d{x[6], y[6]},
+      new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[6], y[6]},
                       DrawingBoard::Point2d{x[0], y[0]}, edge_color,
                       vertex_color),
   };
@@ -183,28 +186,32 @@ std::unique_ptr<Polygon> Polygon::CreateSamplePolygon() {
   return ret;
 }
 
-std::unique_ptr<Polygon> Polygon::Create(DrawingBoard::Point2d const& p1,
+std::unique_ptr<Polygon> Polygon::Create(DrawingBoard* drawing_board,
+                                         DrawingBoard::Point2d const& p1,
                                          DrawingBoard::Point2d const& p2,
                                          DrawingBoard::Point2d const& p3,
                                          COLORREF edge_color,
                                          COLORREF vertex_color) {
   auto ret = std::make_unique<Polygon>();
-  ret->body_ = std::make_unique<PolygonEdge>(p1, p2, edge_color, vertex_color);
-  ret->body_->AddAfter(new PolygonEdge(p2, p3, edge_color, vertex_color));
-  ret->body_->AddBefore(new PolygonEdge(p3, p1, edge_color, vertex_color));
+  ret->body_ = std::make_unique<PolygonEdge>(drawing_board, p1, p2, edge_color,
+                                             vertex_color);
+  ret->body_->AddAfter(
+      new PolygonEdge(drawing_board, p2, p3, edge_color, vertex_color));
+  ret->body_->AddBefore(
+      new PolygonEdge(drawing_board, p3, p1, edge_color, vertex_color));
   ret->nverticies_ = 3;
+  ret->drawing_board_ = drawing_board;
   return ret;
 }
 
-void Polygon::Display(DrawingBoard* drawing_board) {
+void Polygon::Display() {
   auto* ptr = body_.get();
   do {
-    ptr->Display(drawing_board);
+    ptr->Display();
   } while ((ptr = ptr->Next()) != body_.get());
 }
 
-bool Polygon::OnMouseLButtonDown(DrawingBoard* drawing_board,
-                                 DrawingBoard::Point2d const& mouse_pos) {
+bool Polygon::OnMouseLButtonDown(DrawingBoard::Point2d const& mouse_pos) {
   auto* ptr = body_.get();
   bool ret = false;
   do {
@@ -213,8 +220,7 @@ bool Polygon::OnMouseLButtonDown(DrawingBoard* drawing_board,
   return ret;
 }
 
-bool Polygon::OnMouseLButtonUp(DrawingBoard* drawing_board,
-                               DrawingBoard::Point2d const& mouse_pos) {
+bool Polygon::OnMouseLButtonUp(DrawingBoard::Point2d const& mouse_pos) {
   auto* ptr = body_.get();
   bool ret = false;
   do {
@@ -223,14 +229,13 @@ bool Polygon::OnMouseLButtonUp(DrawingBoard* drawing_board,
   return ret;
 }
 
-bool Polygon::OnMouseMove(DrawingBoard* drawing_board,
-                          DrawingBoard::Point2d const& mouse_pos,
+bool Polygon::OnMouseMove(DrawingBoard::Point2d const& mouse_pos,
                           bool move_whole) {
   if (move_whole)
-    return body_->MoveWhole(mouse_pos, drawing_board->GetPreviousMousePos());
+    return body_->MoveWhole(mouse_pos, drawing_board_->GetPreviousMousePos());
   auto* ptr = body_.get();
   do {
-    if (ptr->OnMouseMove(mouse_pos, drawing_board->GetPreviousMousePos(),
+    if (ptr->OnMouseMove(mouse_pos, drawing_board_->GetPreviousMousePos(),
                          3 * nverticies_))
       return true;
   } while ((ptr = ptr->Next()) != body_.get());
@@ -308,6 +313,40 @@ bool Polygon::SetEqualLength(DrawingBoard::Point2d const& p1,
   return e1->SetEqualLength(e2, 3 * nverticies_);
 }
 
+std::unique_ptr<Polygon> Polygon::Clone() {
+  auto ret = std::make_unique<Polygon>();
+  ret->drawing_board_ = drawing_board_;
+  ret->nverticies_ = nverticies_;
+  auto* ptr = body_.get();
+  std::map<PolygonEdge*, PolygonEdge*> map;
+  ret->body_.reset(new PolygonEdge(*body_));
+  map[body_.get()] = ret->body_.get();
+  ptr = ptr->Next();
+  do {
+    auto* edge = new PolygonEdge(*ptr);
+    map[ptr] = edge;
+    ret->body_->AddBefore(edge);
+  } while ((ptr = ptr->Next()) != body_.get());
+  auto* ret_body = ret->body_.get();
+  do {
+    ret_body->constrained_edge_ = map[ptr->constrained_edge_];
+    ret_body->constraint_ = ptr->constraint_;
+    ret_body->constraint_id_ = ptr->constraint_id_;
+
+    ret_body = ret_body->Next();
+  } while ((ptr = ptr->Next()) != body_.get());
+  return ret;
+}
+
+bool Polygon::Active() {
+  auto* ptr = body_.get();
+  do {
+    if (ptr->Active())
+      return true;
+  } while ((ptr = ptr->Next()) != body_.get());
+  return false;
+}
+
 Polygon::PolygonEdge::~PolygonEdge() {
   if (next_ != this) {
     prev_->next_ = nullptr;
@@ -315,24 +354,39 @@ Polygon::PolygonEdge::~PolygonEdge() {
   }
 }
 
-Polygon::PolygonEdge::PolygonEdge(DrawingBoard::Point2d const& begin,
+Polygon::PolygonEdge::PolygonEdge(DrawingBoard* drawing_board,
+                                  DrawingBoard::Point2d const& begin,
                                   DrawingBoard::Point2d const& end,
                                   COLORREF edge_color,
                                   COLORREF vertex_color)
-    : begin_(begin),
+    : drawing_board_(drawing_board),
+      begin_(begin),
       end_(end),
       next_(this),
       prev_(this),
       edge_color_(edge_color),
       vertex_color_(vertex_color) {}
 
-void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
+Polygon::PolygonEdge::PolygonEdge(PolygonEdge const& other)
+    : drawing_board_(other.drawing_board_),
+      begin_(other.begin_),
+      end_(other.end_),
+      next_(this),
+      prev_(this),
+      edge_color_(other.edge_color_),
+      vertex_color_(other.vertex_color_),
+      is_edge_clicked_(other.is_edge_clicked_),
+      is_clicked_(other.is_clicked_),
+      begin_clicked_(other.begin_clicked_),
+      correct_(other.correct_) {}
+
+void Polygon::PolygonEdge::Display() {
   DrawingBoard::Point2d constrained_begin{
-      std::max(0.0, std::min<double>(drawing_board->GetWidth(), begin_.x)),
-      std::max(0.0, std::min<double>(drawing_board->GetWidth(), begin_.y))};
+      std::max(0.0, std::min<double>(drawing_board_->GetWidth(), begin_.x)),
+      std::max(0.0, std::min<double>(drawing_board_->GetWidth(), begin_.y))};
   DrawingBoard::Point2d constrained_end{
-      std::max(0.0, std::min<double>(drawing_board->GetWidth(), end_.x)),
-      std::max(0.0, std::min<double>(drawing_board->GetWidth(), end_.y))};
+      std::max(0.0, std::min<double>(drawing_board_->GetWidth(), end_.x)),
+      std::max(0.0, std::min<double>(drawing_board_->GetWidth(), end_.y))};
   int x, y, i, xe, ye;
   int dx = static_cast<int>(end_.x) - static_cast<int>(begin_.x);
   int dy = static_cast<int>(end_.y) - static_cast<int>(begin_.y);
@@ -350,7 +404,7 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
       y = end_.y;
       xe = constrained_begin.x;
     }
-    drawing_board->SetPixel(x, y, edge_color_);
+    drawing_board_->SetPixel(x, y, edge_color_);
     for (i = 0; x < xe; ++i) {
       ++x;
       if (px < 0) {
@@ -362,7 +416,7 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
           --y;
         px += 2 * (dy1 - dx1);
       }
-      drawing_board->SetPixel(x, y, edge_color_);
+      drawing_board_->SetPixel(x, y, edge_color_);
     }
   } else {
     if (dy >= 0) {
@@ -374,7 +428,7 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
       y = end_.y;
       ye = constrained_begin.y;
     }
-    drawing_board->SetPixel(x, y, edge_color_);
+    drawing_board_->SetPixel(x, y, edge_color_);
     for (i = 0; y < ye; ++i) {
       ++y;
       if (py <= 0) {
@@ -386,20 +440,20 @@ void Polygon::PolygonEdge::Display(DrawingBoard* drawing_board) {
           --x;
         py += 2 * (dx1 - dy1);
       }
-      drawing_board->SetPixel(x, y, edge_color_);
+      drawing_board_->SetPixel(x, y, edge_color_);
     }
   }
-  drawing_board->SetPixel(begin_.x, begin_.y, vertex_color_);
-  drawing_board->SetPixel(end_.x, end_.y, vertex_color_);
+  drawing_board_->SetPixel(begin_.x, begin_.y, vertex_color_);
+  drawing_board_->SetPixel(end_.x, end_.y, vertex_color_);
   switch (constraint_) {
     case Constraint::PERPENDICULAR:
       DisplayLabel(
-          drawing_board, (begin_ + end_) / 2,
+          drawing_board_, (begin_ + end_) / 2,
           std::wstring(kUpTack).append(std::to_wstring(constraint_id_)));
       break;
     case Constraint::EQUAL_LENGTH:
       DisplayLabel(
-          drawing_board, (begin_ + end_) / 2,
+          drawing_board_, (begin_ + end_) / 2,
           std::wstring(kEqualSign).append(std::to_wstring(constraint_id_)));
       break;
   }
@@ -499,7 +553,8 @@ bool Polygon::PolygonEdge::Split(DrawingBoard::Point2d const& mouse_pos) {
     RemoveConstraint();
     DrawingBoard::Point2d mid = {begin_.x + end_.x, begin_.y + end_.y};
     mid = mid / 2;
-    auto* new_edge = new PolygonEdge(mid, end_, edge_color_, vertex_color_);
+    auto* new_edge =
+        new PolygonEdge(drawing_board_, mid, end_, edge_color_, vertex_color_);
     new_edge->next_ = next_;
     next_->prev_ = new_edge;
     next_ = new_edge;
@@ -535,8 +590,10 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin,
                                     int max_calls) {
   if (begin_ == begin)
     return;
-  if (max_calls < 0)
-    RemoveConstraint();
+  if (max_calls < 0) {
+    SetIncorrect();
+    return;
+  }
   switch (constraint_) {
     case Constraint::NONE:
       begin_ = begin;
@@ -572,8 +629,8 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin,
         constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
         prev_->SetEnd(begin_, max_calls - 1);
       } else if (prev_ == constrained_edge_) {
-        prev_->end_ = begin;
         constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
+        prev_->end_ = begin;
       } else {
         constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
         prev_->SetEnd(begin_, max_calls - 1);
@@ -586,8 +643,10 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end,
                                   int max_calls) {
   if (end == end_)
     return;
-  if (max_calls < 0)
-    RemoveConstraint();
+  if (max_calls < 0) {
+    SetIncorrect();
+    return;
+  }
   switch (constraint_) {
     case Constraint::NONE:
       end_ = end;
@@ -623,8 +682,8 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end,
         constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
         next_->SetBegin(end_, max_calls - 1);
       } else if (next_ == constrained_edge_) {
-        next_->begin_ = end;
         constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
+        next_->begin_ = end;
       } else {
         constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
         next_->SetBegin(end_, max_calls - 1);
@@ -690,7 +749,13 @@ bool Polygon::PolygonEdge::SetEqualLength(PolygonEdge* edge, int max_calls) {
   constrained_edge_ = edge;
   edge->constrained_edge_ = this;
   constraint_id_ = edge->constraint_id_ = id_manager::Get();
-  edge->SetLengthByBegin(Length(), max_calls);
+  if (edge == next_)
+    edge->SetLengthByBegin(Length(), max_calls);
+  else if (edge == prev_)
+    edge->SetLengthByEnd(Length(), max_calls);
+  else
+    edge->SetLengthByBegin(Length(), max_calls);
+
   return true;
 }
 
@@ -715,9 +780,15 @@ void Polygon::PolygonEdge::SetLengthByBegin(double length, int max_calls) {
   vec = vec * length;
   begin_ = end_ + vec;
   if (prev_->constraint_ == Constraint::EQUAL_LENGTH) {
-    auto p = ApproxCircleIntersection(end_, prev_->begin_, begin_, prev_->end_);
-    if (p.has_value()) {
-      prev_->end_ = begin_ = p.value();
+    auto intersection =
+        CircleIntersection(end_, prev_->begin_, begin_, prev_->end_);
+    if (intersection.has_value()) {
+      if (DistanceSquared(begin_, intersection->p1) <
+          DistanceSquared(begin_, intersection->p2)) {
+        prev_->end_ = begin_ = intersection->p1;
+      } else {
+        prev_->end_ = begin_ = intersection->p2;
+      }
       return;
     }
   }
@@ -733,9 +804,15 @@ void Polygon::PolygonEdge::SetLengthByEnd(double length, int max_calls) {
   vec = vec * length;
   end_ = begin_ + vec;
   if (next_->constraint_ == Constraint::EQUAL_LENGTH) {
-    auto p = ApproxCircleIntersection(begin_, next_->end_, end_, next_->begin_);
-    if (p.has_value()) {
-      next_->begin_ = end_ = p.value();
+    auto intersection =
+        CircleIntersection(begin_, next_->end_, end_, next_->begin_);
+    if (intersection.has_value()) {
+      if (DistanceSquared(end_, intersection->p1) <
+          DistanceSquared(end_, intersection->p2)) {
+        next_->begin_ = end_ = intersection->p1;
+      } else {
+        next_->begin_ = end_ = intersection->p2;
+      }
       return;
     }
   }
@@ -796,5 +873,13 @@ void Polygon::PolygonEdge::SetPerpendicularByEnd(PolygonEdge* edge,
       next_->SetBegin(end_, max_calls - 1);
     }
   }
+}
+
+void Polygon::PolygonEdge::SetIncorrect() {
+  if (!correct_)
+    return;
+  correct_ = false;
+  next_->SetIncorrect();
+  prev_->SetIncorrect();
 }
 }  // namespace gk

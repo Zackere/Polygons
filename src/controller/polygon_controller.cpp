@@ -17,7 +17,7 @@ bool PolygonController::OnMouseLButtonDown(DrawingBoard* board,
                                            DrawingBoard::Point2d mouse_pos) {
   if (state_ == State::FREE) {
     for (auto& polygon : polygons_)
-      if (polygon->OnMouseLButtonDown(board, mouse_pos))
+      if (polygon->OnMouseLButtonDown(mouse_pos))
         return true;
   }
   return false;
@@ -27,7 +27,7 @@ bool PolygonController::OnMouseLButtonUp(DrawingBoard* board,
                                          DrawingBoard::Point2d mouse_pos) {
   if (state_ == State::FREE) {
     for (auto& polygon : polygons_)
-      if (polygon->OnMouseLButtonUp(board, mouse_pos))
+      if (polygon->OnMouseLButtonUp(mouse_pos))
         return true;
   }
   return false;
@@ -44,7 +44,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(
       return false;
     case State::CREATE_POLYGON:
       if (polygon_verticies_.size() == 2) {
-        polygons_.insert(Polygon::Create(polygon_verticies_[0],
+        polygons_.insert(Polygon::Create(board, polygon_verticies_[0],
                                          polygon_verticies_[1], mouse_pos,
                                          RGB(0, 255, 0), RGB(255, 0, 0)));
         polygon_verticies_.clear();
@@ -67,7 +67,6 @@ bool PolygonController::OnMouseLButtonDoubleClick(
           for (auto& polygon : polygons_)
             if (polygon->SetPerpendicular(last_click_.value(), mouse_pos)) {
               last_click_.reset();
-              SetState(State::FREE, board);
               return true;
             }
           last_click_.emplace(mouse_pos);
@@ -82,7 +81,6 @@ bool PolygonController::OnMouseLButtonDoubleClick(
           for (auto& polygon : polygons_)
             if (polygon->SetEqualLength(last_click_.value(), mouse_pos)) {
               last_click_.reset();
-              SetState(State::FREE, board);
               return true;
             }
           last_click_.emplace(mouse_pos);
@@ -100,10 +98,19 @@ bool PolygonController::OnMouseLButtonDoubleClick(
 bool PolygonController::OnMouseMove(DrawingBoard* board,
                                     DrawingBoard::Point2d mouse_pos) {
   if (state_ == State::FREE) {
-    for (auto& polygon : polygons_)
-      if (polygon->OnMouseMove(board, mouse_pos,
-                               board->GetKeyState(VK_CONTROL)))
-        return true;
+    for (auto it = polygons_.begin(); it != polygons_.end(); ++ it) {
+      if ((*it)->Active()) {
+        auto copy = (*it)->Clone();
+        if ((*it)->OnMouseMove(mouse_pos, board->GetKeyState(VK_CONTROL))) {
+          if (!(*it)->Correct()) {
+            it = polygons_.erase(it);
+            copy->OnMouseMove(mouse_pos, true);
+            polygons_.insert(std::move(copy));
+          }
+          return true;
+        }
+      }
+    }
   }
   return false;
 }
@@ -135,7 +142,7 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
       SetState(State::PURE_DESTRUCTION, board);
       break;
     case VK_SPACE:
-      polygons_.insert(Polygon::CreateSamplePolygon());
+      polygons_.insert(Polygon::CreateSamplePolygon(board));
       break;
   }
   return false;
@@ -143,7 +150,7 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
 
 void PolygonController::Draw(DrawingBoard* board) {
   for (auto& polygon : polygons_)
-    polygon->Display(board);
+    polygon->Display();
 }
 
 void PolygonController::SetState(State state, DrawingBoard* board) {

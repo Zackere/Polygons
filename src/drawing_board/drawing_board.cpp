@@ -140,8 +140,8 @@ void DrawingBoard::DrawTxt(Coordinate posx,
 }
 
 void DrawingBoard::ShowError(std::wstring_view error_message, bool fatal) {
-  MessageBoxW(NULL, error_message.data(), nullptr,
-              fatal ? MB_ICONERROR : MB_ICONWARNING);
+  MessageBoxW(window_, error_message.data(), nullptr,
+              (fatal ? MB_ICONERROR : MB_ICONWARNING) | MB_SETFOREGROUND);
   if (fatal)
     PostQuitMessage(1);
 }
