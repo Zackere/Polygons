@@ -11,7 +11,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace gk {
 namespace {
@@ -72,8 +71,7 @@ double Determinant(DrawingBoard::Point2d const& p1,
 bool Colinear(DrawingBoard::Point2d const& p1,
               DrawingBoard::Point2d const& p2,
               DrawingBoard::Point2d const& p3) {
-  return std::abs(Determinant(p1 - p2, p2 - p3)) <
-         DrawingBoard::Point2d::kVerySmallValue;
+  return std::abs(Determinant(p1 - p2, p2 - p3)) < kVerySmallValue;
 }
 
 std::optional<DrawingBoard::Point2d> IntersectLines(
@@ -124,8 +122,8 @@ std::unique_ptr<Polygon> Polygon::CreateSamplePolygon(
     DrawingBoard* drawing_board) {
   constexpr COLORREF edge_color = RGB(0, 255, 0);
   constexpr COLORREF vertex_color = RGB(255, 0, 0);
-  std::vector<double> x{262.0, 290.0, 170.0, 197.0, 90.0, 11.0, 86.0};
-  std::vector<double> y{279.0, 222.0, 198.0, 59.0, 5.0, 110.0, 278.0};
+  constexpr double x[] = {262.0, 290.0, 170.0, 197.0, 90.0, 11.0, 86.0};
+  constexpr double y[] = {279.0, 222.0, 198.0, 59.0, 5.0, 110.0, 278.0};
   auto ret = std::make_unique<Polygon>();
   PolygonEdge* edge[] = {
       new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[0], y[0]},
@@ -472,9 +470,11 @@ void Polygon::PolygonEdge::AddBefore(PolygonEdge* edge) {
   prev_->next_ = edge;
   prev_ = edge;
 }
+
 double Polygon::PolygonEdge::Length() const {
   return std::sqrt(DistanceSquared(begin_, end_));
 }
+
 bool Polygon::PolygonEdge::OnMouseLButtonDown(
     DrawingBoard::Point2d const& mouse_pos) {
   if (DistanceSquared(mouse_pos, begin_) < kMinDistanceFromVertexSquared) {
@@ -551,8 +551,7 @@ bool Polygon::PolygonEdge::Split(DrawingBoard::Point2d const& mouse_pos) {
   if (DistanceToSegmentSquared(begin_, end_, mouse_pos) <
       kMinDistanceFromEdgeSquared) {
     RemoveConstraint();
-    DrawingBoard::Point2d mid = {begin_.x + end_.x, begin_.y + end_.y};
-    mid = mid / 2;
+    auto mid = DrawingBoard::Point2d{begin_.x + end_.x, begin_.y + end_.y} / 2;
     auto* new_edge =
         new PolygonEdge(drawing_board_, mid, end_, edge_color_, vertex_color_);
     new_edge->next_ = next_;
@@ -591,7 +590,7 @@ bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
     prev_ = this;
     next_ = this;
     delete this;
-	return true;
+    return true;
   } else if (DistanceToSegmentSquared(begin_, end_, point) <
              kMinDistanceFromEdgeSquared) {
     RemoveConstraint();
@@ -599,6 +598,7 @@ bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
   }
   return false;
 }
+
 void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin,
                                     int max_calls) {
   if (begin_ == begin)
