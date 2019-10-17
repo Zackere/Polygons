@@ -181,6 +181,7 @@ std::unique_ptr<Polygon> Polygon::CreateSamplePolygon(
   edge[6]->constrained_edge_ = nullptr;
 
   ret->nverticies_ = 7;
+  ret->drawing_board_ = drawing_board;
   return ret;
 }
 
