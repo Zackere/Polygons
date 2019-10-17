@@ -570,6 +570,7 @@ bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
                                   int max_calls) {
   if (DistanceSquared(end_, point) < kMinDistanceFromVertexSquared) {
     RemoveConstraint();
+    next_->RemoveConstraint();
     next_->prev_ = prev_;
     next_->SetBegin(begin_, max_calls - 1);
     prev_->next_ = next_;
@@ -579,6 +580,18 @@ bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
     next_ = this;
     delete this;
     return true;
+  } else if (DistanceSquared(begin_, point) < kMinDistanceFromEdgeSquared) {
+    RemoveConstraint();
+    prev_->RemoveConstraint();
+    prev_->next_ = next_;
+    prev_->SetBegin(end_, max_calls - 1);
+    next_->prev_ = prev_;
+    if (*head == this)
+      *head = prev_;
+    prev_ = this;
+    next_ = this;
+    delete this;
+	return true;
   } else if (DistanceToSegmentSquared(begin_, end_, point) <
              kMinDistanceFromEdgeSquared) {
     RemoveConstraint();
