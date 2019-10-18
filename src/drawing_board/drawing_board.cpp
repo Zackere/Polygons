@@ -86,7 +86,7 @@ DrawingBoard::DrawingBoard(Size posx,
   }
   SetWindowLongPtr(window_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   window_hdc_ = GetDC(window_);
-  POINT mouse_pos = GetCursorPosInWindow(window_);
+  const auto mouse_pos = GetCursorPosInWindow(window_);
   last_mouse_pos_ = Point2d(mouse_pos.x, mouse_pos.y);
 
   hdc_mem_ = CreateCompatibleDC(window_hdc_);

@@ -75,18 +75,18 @@ bool Colinear(DrawingBoard::Point2d const& p1,
 }
 
 std::optional<DrawingBoard::Point2d> IntersectLines(
-    DrawingBoard::Point2d const& A1,
-    DrawingBoard::Point2d const& A2,
-    DrawingBoard::Point2d const& B1,
-    DrawingBoard::Point2d const& B2) {
+    DrawingBoard::Point2d const& p11,
+    DrawingBoard::Point2d const& p12,
+    DrawingBoard::Point2d const& p21,
+    DrawingBoard::Point2d const& p22) {
   // Line represented as a1x + b1y = c1;
-  double a1 = A2.y - A1.y;
-  double b1 = A1.x - A2.x;
-  double c1 = a1 * A1.x + b1 * A1.y;
+  double a1 = p12.y - p11.y;
+  double b1 = p11.x - p12.x;
+  double c1 = a1 * p11.x + b1 * p11.y;
   // Line represented as a2x + b2y = c2;
-  double a2 = B2.y - B1.y;
-  double b2 = B1.x - B2.x;
-  double c2 = a2 * B1.x + b2 * B1.y;
+  double a2 = p22.y - p21.y;
+  double b2 = p21.x - p22.x;
+  double c2 = a2 * p21.x + b2 * p21.y;
   double det = a1 * b2 - a2 * b1;
   if (std::abs(det) < kVerySmallValue)
     return std::nullopt;
@@ -387,10 +387,10 @@ void Polygon::PolygonEdge::Display() {
       std::max(0.0, std::min<double>(drawing_board_->GetWidth(), end_.x)),
       std::max(0.0, std::min<double>(drawing_board_->GetWidth(), end_.y))};
   int x, y, i, xe, ye;
-  int dx = static_cast<int>(end_.x) - static_cast<int>(begin_.x);
-  int dy = static_cast<int>(end_.y) - static_cast<int>(begin_.y);
-  int dx1 = std::abs(dx);
-  int dy1 = std::abs(dy);
+  const int dx = static_cast<int>(end_.x) - static_cast<int>(begin_.x);
+  const int dy = static_cast<int>(end_.y) - static_cast<int>(begin_.y);
+  const int dx1 = std::abs(dx);
+  const int dy1 = std::abs(dy);
   int px = 2 * dy1 - dx1;
   int py = 2 * dx1 - dy1;
   if (dy1 <= dx1) {
@@ -552,7 +552,8 @@ bool Polygon::PolygonEdge::Split(DrawingBoard::Point2d const& mouse_pos) {
   if (DistanceToSegmentSquared(begin_, end_, mouse_pos) <
       kMinDistanceFromEdgeSquared) {
     RemoveConstraint();
-    auto mid = DrawingBoard::Point2d{begin_.x + end_.x, begin_.y + end_.y} / 2;
+    const auto mid =
+        DrawingBoard::Point2d{(begin_.x + end_.x) / 2, (begin_.y + end_.y) / 2};
     auto* new_edge =
         new PolygonEdge(drawing_board_, mid, end_, edge_color_, vertex_color_);
     new_edge->next_ = next_;
@@ -619,10 +620,10 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin,
         constrained_edge_->SetPerpendicularByEnd(this, max_calls - 1);
         prev_->SetEnd(begin_, max_calls - 1);
       } else if (prev_ == constrained_edge_) {
-        auto projection_onto_this =
+        const auto projection_onto_this =
             ((end_ - begin_) * DotProduct(begin - begin_, end_ - begin_)) /
             DistanceSquared(end_, begin_);
-        auto projection_onto_prev =
+        const auto projection_onto_prev =
             ((prev_->end_ - prev_->begin_) *
              DotProduct(begin - begin_, prev_->end_ - prev_->begin_)) /
             DistanceSquared(prev_->end_, prev_->begin_);
@@ -672,10 +673,10 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end,
         constrained_edge_->SetPerpendicularByBegin(this, max_calls - 1);
         next_->SetBegin(end_, max_calls - 1);
       } else if (next_ == constrained_edge_) {
-        auto projection_onto_this =
+        const auto projection_onto_this =
             ((end_ - begin_) * DotProduct(end - end_, end_ - begin_)) /
             DistanceSquared(end_, begin_);
-        auto projection_onto_next =
+        const auto projection_onto_next =
             ((next_->end_ - next_->begin_) *
              DotProduct(end - end_, next_->end_ - next_->begin_)) /
             DistanceSquared(next_->end_, next_->begin_);
@@ -710,16 +711,10 @@ void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector,
                                         int max_calls) {
   if (vector == DrawingBoard::Point2d{0, 0})
     return;
-  switch (constraint_) {
-    case Constraint::PERPENDICULAR:
-    case Constraint::EQUAL_LENGTH:
-    case Constraint::NONE:
-      begin_ = begin_ + vector;
-      end_ = end_ + vector;
-      next_->SetBegin(end_, max_calls - 1);
-      prev_->SetEnd(begin_, max_calls - 1);
-      break;
-  }
+  begin_ = begin_ + vector;
+  end_ = end_ + vector;
+  next_->SetBegin(end_, max_calls - 1);
+  prev_->SetEnd(begin_, max_calls - 1);
 }
 
 bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge, int max_calls) {
@@ -847,7 +842,7 @@ void Polygon::PolygonEdge::SetPerpendicularByBegin(PolygonEdge* edge,
     begin_ = prev_->end_;
   } else {
     if (prev_->constraint_ == Constraint::PERPENDICULAR) {
-      auto intersection =
+      const auto intersection =
           IntersectLines(begin_, end_, prev_->begin_, prev_->end_);
       if (intersection.has_value()) {
         begin_ = prev_->end_ = intersection.value();
@@ -875,7 +870,7 @@ void Polygon::PolygonEdge::SetPerpendicularByEnd(PolygonEdge* edge,
     end_ = next_->begin_;
   } else {
     if (next_->constraint_ == Constraint::PERPENDICULAR) {
-      auto intersection =
+      const auto intersection =
           IntersectLines(begin_, end_, next_->begin_, next_->end_);
       if (intersection.has_value()) {
         end_ = next_->begin_ = intersection.value();

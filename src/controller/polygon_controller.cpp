@@ -98,7 +98,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(
 bool PolygonController::OnMouseMove(DrawingBoard* board,
                                     DrawingBoard::Point2d mouse_pos) {
   if (state_ == State::FREE) {
-    for (auto it = polygons_.begin(); it != polygons_.end(); ++ it) {
+    for (auto it = polygons_.begin(); it != polygons_.end(); ++it) {
       if ((*it)->Active()) {
         auto copy = (*it)->Clone();
         if ((*it)->OnMouseMove(mouse_pos, board->GetKeyState(VK_CONTROL))) {
@@ -154,7 +154,7 @@ void PolygonController::Draw(DrawingBoard* board) {
 }
 
 void PolygonController::SetState(State state, DrawingBoard* board) {
-  State old_state = state_;
+  const State old_state = state_;
   switch (state) {
     case State::FREE:
       board->SetTitle(L"Free mode");
