@@ -71,7 +71,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(
                 it = polygons_.erase(it);
                 polygons_.insert(std::move(copy));
                 board->ShowError(
-                    L"Could not add perpendicular constraint. (Polygon broke)",
+                    L"Could not add perpendicular constraint. Try again later.",
                     false);
               }
               return true;
@@ -93,7 +93,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(
                 it = polygons_.erase(it);
                 polygons_.insert(std::move(copy));
                 board->ShowError(
-                    L"Could not add equal length constraint. (Polygon broke)",
+                    L"Could not add equal length constraint. Try again later.",
                     false);
               }
               return true;
