@@ -380,12 +380,6 @@ Polygon::PolygonEdge::PolygonEdge(PolygonEdge const& other)
       correct_(other.correct_) {}
 
 void Polygon::PolygonEdge::Display() {
-  DrawingBoard::Point2d constrained_begin{
-      std::max(0.0, std::min<double>(drawing_board_->GetWidth(), begin_.x)),
-      std::max(0.0, std::min<double>(drawing_board_->GetWidth(), begin_.y))};
-  DrawingBoard::Point2d constrained_end{
-      std::max(0.0, std::min<double>(drawing_board_->GetWidth(), end_.x)),
-      std::max(0.0, std::min<double>(drawing_board_->GetWidth(), end_.y))};
   int x, y, i, xe, ye;
   const int dx = static_cast<int>(end_.x) - static_cast<int>(begin_.x);
   const int dy = static_cast<int>(end_.y) - static_cast<int>(begin_.y);
@@ -397,11 +391,11 @@ void Polygon::PolygonEdge::Display() {
     if (dx >= 0) {
       x = begin_.x;
       y = begin_.y;
-      xe = constrained_end.x;
+      xe = end_.x;
     } else {
       x = end_.x;
       y = end_.y;
-      xe = constrained_begin.x;
+      xe = begin_.x;
     }
     drawing_board_->SetPixel(x, y, edge_color_);
     for (i = 0; x < xe; ++i) {
@@ -409,7 +403,7 @@ void Polygon::PolygonEdge::Display() {
       if (px < 0) {
         px += 2 * dy1;
       } else {
-        if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
+        if (dx * dy > 0)
           ++y;
         else
           --y;
@@ -421,11 +415,11 @@ void Polygon::PolygonEdge::Display() {
     if (dy >= 0) {
       x = begin_.x;
       y = begin_.y;
-      ye = constrained_end.y;
+      ye = end_.y;
     } else {
       x = end_.x;
       y = end_.y;
-      ye = constrained_begin.y;
+      ye = begin_.y;
     }
     drawing_board_->SetPixel(x, y, edge_color_);
     for (i = 0; y < ye; ++i) {
@@ -433,7 +427,7 @@ void Polygon::PolygonEdge::Display() {
       if (py <= 0) {
         py += 2 * dx1;
       } else {
-        if ((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
+        if (dx * dy > 0)
           ++x;
         else
           --x;
@@ -712,9 +706,9 @@ void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector,
   if (vector == DrawingBoard::Point2d{0, 0})
     return;
   begin_ = begin_ + vector;
+  prev_->SetEnd(begin_, max_calls - 1);
   end_ = end_ + vector;
   next_->SetBegin(end_, max_calls - 1);
-  prev_->SetEnd(begin_, max_calls - 1);
 }
 
 bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge, int max_calls) {
