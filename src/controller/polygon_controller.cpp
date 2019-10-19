@@ -183,7 +183,7 @@ void PolygonController::SetState(State state, DrawingBoard* board) {
       polygon_verticies_.clear();
       break;
     case State::PURE_DESTRUCTION:
-      board->SetTitle(L"Vertex deletion mode");
+      board->SetTitle(L"Deletion mode");
       break;
     case State::SET_PERPENDICULAR:
       last_click_.reset();
