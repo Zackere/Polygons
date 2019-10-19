@@ -21,6 +21,7 @@ Any excessive values shall be ignored.
 - A-key: Add equal length constraint mode
 - S-key: Add perpendicular constraint mode
 - D-key: Deletion mode
+- Space: Create sample polygon
 
 Double-click is widely used to perform some actions. Windows' title shows you the mode you're in.
 
@@ -35,5 +36,7 @@ In order to create more sophisticated polygon, enter **Vertex creation mode [w k
 You can also set constraints on pairs of polygons' edges. **Remember, you can set only one constraint per edge and between edges of one polygon**. In order to set **Equal length constraint [a key]**, press A key and double-click on two edges you want to set constraint on. When done, notice there's some text nearby edges you just chose. The first character is '=' sign meaning that the edge in question has a equal length constraint set on it. The rest is a **unique cosntraint ID** used to distinguish constraints. You may also want to set **Perpendicular constraint [s key]**. To apply this constraint, act just like as you would when setting equal length constraint. This time, the label nearby edges with perpendicular constraint starts with '⊥' and ends with unique constraint ID as before.
 
 In order to delete verticies and/or constraints enter **Deletion mode [d key]**. In deletion mode, you can delete verticies by double-clicking on them (**this action removes adjacent edges' constraints**) and remove constraints set on edges by double-clicking on the edge you want to remove constraint from. When you attempt to remove a vertex from a triangle, the whole polygon will be deleted.
+
+If you want to create sample polygon, just press **Space**.
 
 Window title changes depending on the mode you're in.
