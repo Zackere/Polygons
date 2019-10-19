@@ -141,7 +141,7 @@ void DrawingBoard::DrawTxt(Coordinate posx,
 
 void DrawingBoard::ShowError(std::wstring_view error_message, bool fatal) {
   MessageBoxW(window_, error_message.data(), nullptr,
-              (fatal ? MB_ICONERROR : MB_ICONWARNING) | MB_SETFOREGROUND);
+              MB_ICONERROR | MB_SETFOREGROUND | MB_APPLMODAL);
   if (fatal)
     PostQuitMessage(1);
 }
@@ -161,7 +161,7 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     case WM_PAINT:
       if (window)
         window->Display();
-      return 0;
+      return DefWindowProcW(hWnd, message, wParam, lParam);
     case WM_KEYDOWN:
       if (window)
         window->OnKeyDown(wParam, (lParam >> 30) & 1);

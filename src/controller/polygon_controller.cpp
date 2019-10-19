@@ -64,11 +64,19 @@ bool PolygonController::OnMouseLButtonDoubleClick(
       return true;
       case State::SET_PERPENDICULAR: {
         if (last_click_.has_value()) {
-          for (auto& polygon : polygons_)
-            if (polygon->SetPerpendicular(last_click_.value(), mouse_pos)) {
-              last_click_.reset();
+          for (auto it = polygons_.begin(); it != polygons_.end(); ++it) {
+            auto copy = (*it)->Clone();
+            if ((*it)->SetPerpendicular(last_click_.value(), mouse_pos)) {
+              if (!(*it)->Correct()) {
+                it = polygons_.erase(it);
+                polygons_.insert(std::move(copy));
+                board->ShowError(
+                    L"Could not add perpendicular constraint. (Polygon broke)",
+                    false);
+              }
               return true;
             }
+          }
           last_click_.emplace(mouse_pos);
           return false;
         } else {
@@ -78,11 +86,19 @@ bool PolygonController::OnMouseLButtonDoubleClick(
       }
       case State::SET_EQUAL_LENGTH: {
         if (last_click_.has_value()) {
-          for (auto& polygon : polygons_)
-            if (polygon->SetEqualLength(last_click_.value(), mouse_pos)) {
-              last_click_.reset();
+          for (auto it = polygons_.begin(); it != polygons_.end(); ++it) {
+            auto copy = (*it)->Clone();
+            if ((*it)->SetEqualLength(last_click_.value(), mouse_pos)) {
+              if (!(*it)->Correct()) {
+                it = polygons_.erase(it);
+                polygons_.insert(std::move(copy));
+                board->ShowError(
+                    L"Could not add equal length constraint. (Polygon broke)",
+                    false);
+              }
               return true;
             }
+          }
           last_click_.emplace(mouse_pos);
           return false;
         } else {
@@ -93,7 +109,7 @@ bool PolygonController::OnMouseLButtonDoubleClick(
     }
   }
   return false;
-}
+}  // namespace gk
 
 bool PolygonController::OnMouseMove(DrawingBoard* board,
                                     DrawingBoard::Point2d mouse_pos) {
