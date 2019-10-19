@@ -159,7 +159,7 @@ bool PolygonController::OnKeyUp(DrawingBoard* board, WPARAM key_code) {
       break;
     case VK_SPACE:
       polygons_.insert(Polygon::CreateSamplePolygon(board));
-      break;
+      return true;
   }
   return false;
 }
