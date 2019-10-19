@@ -17,12 +17,18 @@ void RunMessageLoop() {
   }
 }
 
-std::vector<std::wstring> SplitString(std::wstring const& s, wchar_t delimiter) {
+std::vector<std::wstring> SplitString(std::wstring const& s,
+                                      wchar_t delimiter,
+                                      unsigned int max_tokens) {
   std::vector<std::wstring> tokens;
+  tokens.reserve(max_tokens);
   std::wstring token;
   std::wistringstream tokenStream(s);
-  while (std::getline(tokenStream, token, delimiter))
-    tokens.push_back(token);
+  while (std::getline(tokenStream, token, delimiter)) {
+    tokens.emplace_back(token);
+    if (--max_tokens == 0)
+      return tokens;
+  }
   return tokens;
 }
 }  // namespace
@@ -36,7 +42,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
   gk::DrawingBoard::Size Width = 800;
   gk::DrawingBoard::Size Height = 400;
 
-  const auto args = SplitString(pCmdLine, ' ');
+  const auto args = SplitString(pCmdLine, ' ', 5);
   switch (args.size()) {
     default:
     case 5:
