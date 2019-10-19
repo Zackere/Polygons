@@ -2,6 +2,9 @@
 
 #include <Windows.h>
 
+#include <string>
+#include <vector>
+
 #include "./controller/polygon_controller.hpp"
 #include "./drawing_board/drawing_board.hpp"
 
@@ -13,22 +16,46 @@ void RunMessageLoop() {
     DispatchMessage(&message);
   }
 }
+
+std::vector<std::wstring> SplitString(std::wstring const& s, wchar_t delimiter) {
+  std::vector<std::wstring> tokens;
+  std::wstring token;
+  std::wistringstream tokenStream(s);
+  while (std::getline(tokenStream, token, delimiter))
+    tokens.push_back(token);
+  return tokens;
+}
 }  // namespace
 
 int WINAPI wWinMain(HINSTANCE hInstance,
                     HINSTANCE hPrevInstance,
                     PWSTR pCmdLine,
                     int nCmdShow) {
-  // Please, change these.
-  constexpr gk::DrawingBoard::Size kPosx = 0, kPosy = 0;
-  constexpr gk::DrawingBoard::Size kPixelSize = 2;
-  constexpr gk::DrawingBoard::Size kWidth = 1600;
-  constexpr gk::DrawingBoard::Size kHeight = 800;
+  gk::DrawingBoard::Size Posx = 0, Posy = 0;
+  gk::DrawingBoard::Size PixelSize = 2;
+  gk::DrawingBoard::Size Width = 800;
+  gk::DrawingBoard::Size Height = 400;
 
-  // Do not change these.
+  const auto args = SplitString(pCmdLine, ' ');
+  switch (args.size()) {
+    default:
+    case 5:
+      Posy = std::stoi(args[4], nullptr);
+    case 4:
+      Posx = std::stoi(args[3], nullptr);
+    case 3:
+      Height = std::stoi(args[2], nullptr);
+    case 2:
+      Width = std::stoi(args[1], nullptr);
+    case 1:
+      PixelSize = std::stoi(args[0], nullptr);
+    case 0:
+      break;
+  }
+
   gk::DrawingBoard::RegisterWindowClass(hInstance);
-  gk::DrawingBoard window(kPosx, kPosy, kWidth / kPixelSize,
-                          kHeight / kPixelSize, kPixelSize, hInstance,
+  gk::DrawingBoard window(Posx, Posy, Width / PixelSize, Height / PixelSize,
+                          PixelSize, hInstance,
                           std::make_unique<gk::PolygonController>());
   window.Show();
   RunMessageLoop();

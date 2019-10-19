@@ -1,10 +1,17 @@
-# Polygons
-
-Polygons is a Windows application in which you can add/remove polygons, move them around and add constraints on their edges.
-
 ## Building
 
 Clone this repo and inside you'll find gk1.sln file. Open it with Microsoft Visual Studio (preferably 2019). If you're using one of the older versions, you might want to change Windows SDK Version and Platform Toolset currently installed on your machine. Inside MVS you can build and/or run the app by pressing F5 key.
+
+## Running
+Command line syntax:
+```
+gk1.exe <PixelSize> <WindowWidth> <WindowHeight> <InitialWindowXPos> <InitialWindowYPos>
+```
+Any argument not supplied will be replaced with default value:
+```
+gk1.exe 2 800 400 0 0
+```
+Any excessive values shall be ignored.
 
 ## Quick guide
 
@@ -19,7 +26,7 @@ Double-click is widely used to perform some actions. Windows' title shows you th
 
 ## Long guide
 
-When you run the app, you'll be greeted with black screen. If the window is too big, you need to change appropriate constants in gk1_main.cpp file. By default you are in **Free mode [q key]**. In free mode you can move edges (green lines) and verticies (red dots) around. When **CTRL** key is pressed in this mode, you are able to move whole polygons around.
+When you run the app, you'll be greeted with black screen. By default you are in **Free mode [q key]**. In free mode you can move edges (green lines) and verticies (red dots) around. When **CTRL** key is pressed in this mode, you are able to move whole polygons around.
 
 In order to create your first polygon, press E key in order to enter **Polygon creation mode [e key]**. While in polygon creation mode, **double-click** in three places on the screen in order to create a triangle with verticies in exactly those places.
 
