@@ -184,8 +184,7 @@ std::unique_ptr<Polygon> Polygon::CreateSamplePolygon(
   ret->drawing_board_ = drawing_board;
   auto* ptr = ret->body_.get();
   do {
-    ptr->SetEnd(ptr->end_ + DrawingBoard::Point2d{1, 0},
-                  3 * ret->nverticies_);
+    ptr->SetEnd(ptr->end_ + DrawingBoard::Point2d{1, 0}, 3 * ret->nverticies_);
   } while ((ptr = ptr->next_) != ret->body_.get());
   return ret;
 }
@@ -255,19 +254,20 @@ void Polygon::OnControllerStateChanged(PolygonController* controller) {
 
 bool Polygon::AddVertex(DrawingBoard::Point2d const& pos) {
   auto* ptr = body_.get();
-  while ((ptr = ptr->Next()) != body_.get())
+  do {
     if (ptr->Split(pos)) {
       ++nverticies_;
       return true;
     }
-  return body_->Split(pos);
+  } while ((ptr = ptr->Next()) != body_.get());
+  return false;
 }
 
 bool Polygon::Remove(DrawingBoard::Point2d const& point) {
   auto* ptr = body_.get();
   auto* head = body_.get();
   do {
-    if (ptr->Remove(point, &head, 3 * nverticies_)) {
+    if (ptr->RemoveVertex(point, &head, 3 * nverticies_)) {
       --nverticies_;
       body_.release();
       body_.reset(head);
@@ -275,6 +275,8 @@ bool Polygon::Remove(DrawingBoard::Point2d const& point) {
         return false;
       return true;
     }
+    if (ptr->RemoveConstraint(point))
+      return true;
   } while ((ptr = ptr->Next()) != body_.get());
   return true;
 }
@@ -565,36 +567,32 @@ bool Polygon::PolygonEdge::Split(DrawingBoard::Point2d const& mouse_pos) {
   return false;
 }
 
-bool Polygon::PolygonEdge::Remove(DrawingBoard::Point2d const& point,
-                                  PolygonEdge** head,
-                                  int max_calls) {
+bool Polygon::PolygonEdge::RemoveVertex(DrawingBoard::Point2d const& point,
+                                        PolygonEdge** head,
+                                        int max_calls) {
   if (DistanceSquared(end_, point) < kMinDistanceFromVertexSquared) {
     RemoveConstraint();
     next_->RemoveConstraint();
     next_->prev_ = prev_;
-    next_->SetBegin(begin_, max_calls - 1);
     prev_->next_ = next_;
+    next_->SetBegin(begin_, max_calls - 1);
     if (*head == this)
       *head = next_;
     prev_ = this;
     next_ = this;
     delete this;
     return true;
-  } else if (DistanceSquared(begin_, point) < kMinDistanceFromEdgeSquared) {
+  } else if (DistanceSquared(begin_, point) < kMinDistanceFromVertexSquared) {
     RemoveConstraint();
     prev_->RemoveConstraint();
     prev_->next_ = next_;
-    prev_->SetBegin(end_, max_calls - 1);
     next_->prev_ = prev_;
+    prev_->SetEnd(end_, max_calls - 1);
     if (*head == this)
       *head = prev_;
     prev_ = this;
     next_ = this;
     delete this;
-    return true;
-  } else if (DistanceToSegmentSquared(begin_, end_, point) <
-             kMinDistanceFromEdgeSquared) {
-    RemoveConstraint();
     return true;
   }
   return false;
@@ -777,6 +775,16 @@ void Polygon::PolygonEdge::RemoveConstraint() {
     constrained_edge_->constrained_edge_ = nullptr;
     constrained_edge_ = nullptr;
   }
+}
+
+bool Polygon::PolygonEdge::RemoveConstraint(
+    DrawingBoard::Point2d const& point) {
+  if (DistanceToSegmentSquared(begin_, end_, point) <
+      kMinDistanceFromEdgeSquared) {
+    RemoveConstraint();
+    return true;
+  }
+  return false;
 }
 
 void Polygon::PolygonEdge::SetLengthByBegin(double length, int max_calls) {

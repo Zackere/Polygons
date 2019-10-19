@@ -73,9 +73,9 @@ class Polygon {
                    DrawingBoard::Point2d const& prev_mouse_pos);
     void OnControllerStateChanged(PolygonController* controller);
     bool Split(DrawingBoard::Point2d const& mouse_pos);
-    bool Remove(DrawingBoard::Point2d const& point,
-                PolygonEdge** head,
-                int max_calls);
+    bool RemoveVertex(DrawingBoard::Point2d const& point,
+                      PolygonEdge** head,
+                      int max_calls);
     void SetBegin(DrawingBoard::Point2d const& begin, int max_calls);
     void SetEnd(DrawingBoard::Point2d const& end, int max_calls);
     void MoveByVector(DrawingBoard::Point2d const& vector, int max_calls);
@@ -83,6 +83,7 @@ class Polygon {
     bool SetPerpendicular(PolygonEdge* edge, int max_calls);
     bool SetEqualLength(PolygonEdge* edge, int max_calls);
     void RemoveConstraint();
+    bool RemoveConstraint(DrawingBoard::Point2d const& point);
 
    private:
     void SetLengthByBegin(double length, int max_calls);
