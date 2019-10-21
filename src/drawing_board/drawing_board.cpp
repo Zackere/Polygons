@@ -173,24 +173,28 @@ LRESULT DrawingBoard::WndProc(HWND hWnd,
     case WM_LBUTTONDBLCLK:
       if (window)
         window->OnMouseLButtonDoubleClick(
-            Point2d(LOWORD(lParam), HIWORD(lParam)) / window->GetPixelSize());
+            Point2d(static_cast<int16_t>(LOWORD(lParam)),
+                    static_cast<int16_t>(HIWORD(lParam))) /
+            window->GetPixelSize());
       return 0;
     case WM_LBUTTONDOWN:
       if (window)
-        window->OnMouseLButtonDown(Point2d(LOWORD(lParam), HIWORD(lParam)) /
-                                   window->GetPixelSize());
+        window->OnMouseLButtonDown(
+            Point2d(static_cast<int16_t>(LOWORD(lParam)),
+                    static_cast<int16_t>(HIWORD(lParam))) /
+            window->GetPixelSize());
       return 0;
     case WM_LBUTTONUP:
       if (window)
-        window->OnMouseLButtonUp(Point2d(LOWORD(lParam), HIWORD(lParam)) /
+        window->OnMouseLButtonUp(Point2d(static_cast<int16_t>(LOWORD(lParam)),
+                                         static_cast<int16_t>(HIWORD(lParam))) /
                                  window->GetPixelSize());
       return 0;
     case WM_MOUSEMOVE:
-      if (window) {
-        Point2d pos =
-            Point2d(LOWORD(lParam), HIWORD(lParam)) / window->GetPixelSize();
-        window->OnMouseMove(pos);
-      }
+      if (window)
+        window->OnMouseMove(Point2d(static_cast<int16_t>(LOWORD(lParam)),
+                                    static_cast<int16_t>(HIWORD(lParam))) /
+                            window->GetPixelSize());
       return 0;
     case WM_ERASEBKGND:
       return 1;
