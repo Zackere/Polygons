@@ -2,7 +2,6 @@
 
 #include "id_manager.hpp"
 
-#include <algorithm>
 #include <set>
 
 namespace gk {

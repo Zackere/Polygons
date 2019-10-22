@@ -122,8 +122,11 @@ std::unique_ptr<Polygon> Polygon::CreateSamplePolygon(
     DrawingBoard* drawing_board) {
   constexpr COLORREF edge_color = RGB(0, 255, 0);
   constexpr COLORREF vertex_color = RGB(255, 0, 0);
-  constexpr double x[] = {131.0, 145.0, 135.0, 148.5, 45.0, 5.5, 43.0};
-  constexpr double y[] = {140.0, 111.0, 100.0, 30.0, 2.5, 55.0, 140.0};
+  const auto ps = drawing_board->GetPixelSize();
+  const double x[]{262.0 / ps, 290.0 / ps, 170.0 / ps, 197.0 / ps,
+                   90.0 / ps,  11.0 / ps,  86.0 / ps};
+  const double y[]{279.0 / ps, 222.0 / ps, 198.0 / ps, 59.0 / ps,
+                   5.0 / ps,   110.0 / ps, 278.0 / ps};
   auto ret = std::make_unique<Polygon>();
   PolygonEdge* edge[] = {
       new PolygonEdge(drawing_board, DrawingBoard::Point2d{x[0], y[0]},

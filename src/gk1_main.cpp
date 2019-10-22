@@ -55,10 +55,11 @@ int WINAPI wWinMain(HINSTANCE hInstance,
       Width = std::stoi(args[1], nullptr);
     case 1:
       PixelSize = std::stoi(args[0], nullptr);
+      if (PixelSize <= 0)
+        PixelSize = 1;
     case 0:
       break;
   }
-
   gk::DrawingBoard::RegisterWindowClass(hInstance);
   gk::DrawingBoard window(Posx, Posy, Width / PixelSize, Height / PixelSize,
                           PixelSize, hInstance,
