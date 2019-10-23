@@ -635,9 +635,6 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin,
       if (next_ == constrained_edge_) {
         constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
         prev_->SetEnd(begin_, max_calls - 1);
-      } else if (prev_ == constrained_edge_) {
-        constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
-        prev_->end_ = begin;
       } else {
         constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
         prev_->SetEnd(begin_, max_calls - 1);
@@ -688,9 +685,6 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end,
       if (prev_ == constrained_edge_) {
         constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
         next_->SetBegin(end_, max_calls - 1);
-      } else if (next_ == constrained_edge_) {
-        constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
-        next_->begin_ = end;
       } else {
         constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
         next_->SetBegin(end_, max_calls - 1);
