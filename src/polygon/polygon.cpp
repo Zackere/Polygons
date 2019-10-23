@@ -730,10 +730,12 @@ bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge, int max_calls) {
     edge->constrained_edge_ = this;
     constraint_id_ = edge->constraint_id_ = id_manager::Get();
     const auto circle_center = (end_ + edge->begin_) / 2;
-    if (begin_ == circle_center) {
+    if (Colinear(end_, edge->begin_, circle_center)) {
+      const auto edge_len = edge->Length();
       begin_ = edge->end_ =
-          (edge->begin_ + end_ * DrawingBoard::Point2d{0, 1}) /
-          DrawingBoard::Point2d{0, 1};
+          edge->end_ + ((edge->end_ - edge->begin_) / edge_len *
+                        std::sqrt(edge_len * Length())) *
+                           DrawingBoard::Point2d{0, 1};
     } else {
       begin_ = edge->end_ = ClosestPointOnCircle(
           circle_center, std::sqrt(DistanceSquared(end_, circle_center)),
