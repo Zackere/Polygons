@@ -631,11 +631,18 @@ void Polygon::PolygonEdge::SetBegin(DrawingBoard::Point2d const& begin,
       }
       break;
     case Constraint::EQUAL_LENGTH: {
-      begin_ = begin;
       if (next_ == constrained_edge_) {
+        begin_ = begin;
         constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
         prev_->SetEnd(begin_, max_calls - 1);
+      } else if (prev_ == constrained_edge_) {
+        const auto vec = end_ - begin_ - prev_->end_ + prev_->begin_;
+        const auto projection = (vec * DotProduct(begin - begin_, vec)) /
+                                DistanceSquared(vec, {0, 0});
+        prev_->end_ = begin_ = begin_ + projection;
+        prev_->SetLengthByBegin(Length(), max_calls - 1);
       } else {
+        begin_ = begin;
         constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
         prev_->SetEnd(begin_, max_calls - 1);
       }
@@ -681,11 +688,18 @@ void Polygon::PolygonEdge::SetEnd(DrawingBoard::Point2d const& end,
       }
       break;
     case Constraint::EQUAL_LENGTH: {
-      end_ = end;
       if (prev_ == constrained_edge_) {
+        end_ = end;
         constrained_edge_->SetLengthByBegin(Length(), max_calls - 1);
         next_->SetBegin(end_, max_calls - 1);
+      } else if (next_ == constrained_edge_) {
+        const auto vec = end_ - begin_ - next_->end_ + next_->begin_;
+        const auto projection = ((vec * DotProduct(end - end_, vec)) /
+                                 DistanceSquared(vec, {0, 0}));
+        next_->begin_ = end_ = end_ + projection;
+        next_->SetLengthByEnd(Length(), max_calls - 1);
       } else {
+        end_ = end;
         constrained_edge_->SetLengthByEnd(Length(), max_calls - 1);
         next_->SetBegin(end_, max_calls - 1);
       }
@@ -697,10 +711,9 @@ void Polygon::PolygonEdge::MoveByVector(DrawingBoard::Point2d const& vector,
                                         int max_calls) {
   if (vector == DrawingBoard::Point2d{0, 0})
     return;
-  begin_ = begin_ + vector;
-  prev_->SetEnd(begin_, max_calls - 1);
-  end_ = end_ + vector;
-  next_->SetBegin(end_, max_calls - 1);
+  const auto old_end = end_;
+  SetBegin(begin_ + vector, max_calls - 1);
+  SetEnd(old_end + vector, max_calls - 1);
 }
 
 bool Polygon::PolygonEdge::SetPerpendicular(PolygonEdge* edge, int max_calls) {
