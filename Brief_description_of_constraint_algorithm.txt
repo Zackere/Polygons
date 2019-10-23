@@ -77,12 +77,18 @@ Initially, this method is invoked with max_calls = 3 * number_of_polygon_vertici
 		return
 
 	if constraint == EQUAL_LENGTH
-		this.begin = begin
 		if this.constrained_edge == this.next
+			this.begin = begin
 			constrained_edge.SetLengthByEnd(this.Length(), max_calls - 1)
 			this.prev.SetEnd(this.begin)
 
+		else if this.constrained_edge == this.prev
+			projection = vector (begin - this.begin) projected onto (this.end - this.begin - (this.prev.end - this.prev.begin))
+			this.prev.end = this.begin = this.begin + projection
+			this.prev.SetLengthByBegin(this.Length(), max_calls - 1)
+
 		else
+			this.begin = begin
 			constrained_edge.SetLengthByBegin(this.Length(), max_calls - 1)
 			this.prev.SetEnd(this.begin, max_calls - 1)
 		return
