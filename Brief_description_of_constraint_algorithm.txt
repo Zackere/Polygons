@@ -1,0 +1,91 @@
+The document below describes how the constraint algorithm implemented in this project works.
+
+1. Data structures
+	Each polygon consists of at least 3 edges.
+	Polygons' edges make up a cyclic, bidirectional, linked list.
+	Each polygon_edge exposes methods crucial for the algorithm:
+		void SetBegin(complex, int)
+		void SetEnd(complex, int)
+		void SetIncorrect()
+		void SetPerpendicularByBegin(int)
+		void SetPerpendicularByEnd(int)
+		void SetLengthByBegin(real, int)
+		void SetLengthByEnd(real, int)
+		void Length()
+	and has following private data members:
+		complex begin - first edges' vertex
+		complex end - second edges' vertex
+		enum constraint_type constraint - one of: {NONE, PERPENDICULAR, EQUAL_LENGTH}
+		polygon_edge constrained_edge - constrained edge if constraint != NONE, else null
+		polygon_edge next, prev - next and previous edges making up the linked list
+		bool correct - if set to false then te polygon containing edge in question is incorrect
+				in terms of satisfied constraints
+
+2. SetIncorrect() method
+This method sets this.correct = false and does the same for all other edges in the list.
+After the call every polygon_edge in the same polygon has correct = false.
+
+3. SetPerpendicularByBegin(int max_calls) and SetPerpendicularByEnd(int max_calls) methods
+These methods rotate polygon_edge around the second (first) vertex to the closest point such that their
+constraint (perpendicularity) is satisfied. If neighbouring edge is constrained by PERPENDICULAR constraint, then
+both edges are extended to their point of intersection with each other. Otherwise, neighbours' SetEnd (SetBegin) is invoked.
+
+4. Length()
+This method returns polygon_edge length in the Euclidean metric.
+
+5. SetLengthByBegin(real length, int max_calls) SetLengthByEnd(real length, int max_calls)
+These methods set second (first) vertex so that Length() == length.
+If previous (next) edge is also constrained by EQUAL_LENGTH constraint, then they are both rotated so that their
+verticies meet. Otherwise, neighbours' SetEnd (SetBegin) is invoked.
+
+6. SetBegin(complex begin, int max_calls) method
+This method sets this.begin = begin, but in the same time makes sure that constraints are still satisfied.
+Initially, this method is invoked with max_calls = 3 * number_of_polygon_verticies.
+
+	args:   begin - desired position of the first vertex
+		max_calls - number of calls left to correct the polygon
+
+	algorithm:
+	if max_calls < 0
+		SetIncorrect()
+		return
+
+	if constraint == NONE
+		this.begin = begin
+		this.prev.SetEnd(this.begin, max_calls - 1)
+		return
+
+	if constraint == PERPENDICULAR
+		if this.constrained_edge == this.next
+			this.begin = begin
+			this.constrained_edge.SetPerpendicularByEnd(max_calls - 1)
+			this.prev.SetEnd(this.begin, max_calls - 1)
+
+		else if this.constrained_edge == this.prev
+			projection_onto_self = vector (begin - this.begin) projected onto (this.end - this.begin)
+			projection_onto_prev = vector (begin - this.begin) projected onto (this.prev.end - this.prev.begin)
+			this.prev.end = this.begin = this.begin + projection_onto_self
+			this.prev.SetPerpendicularByBegin(max_calls - 1)
+			this.end = this.end + projection_onto_prev
+			this.prev.end = begin = begin + projection_onto_prev
+			this.SetPerpendicularByEnd(max_calls - 1)
+
+		else
+			this.begin = begin
+			this.constrained_edge.SetPerpendicularByEnd(max_calls - 1)
+			this.prev.SetEnd(this.begin)
+		return
+
+	if constraint == EQUAL_LENGTH
+		this.begin = begin
+		if this.constrained_edge == this.next
+			constrained_edge.SetLengthByEnd(this.Length(), max_calls - 1)
+			this.prev.SetEnd(this.begin)
+
+		else
+			constrained_edge.SetLengthByBegin(this.Length(), max_calls - 1)
+			this.prev.SetEnd(this.begin, max_calls - 1)
+		return
+
+7. SetEnd(complex end, int max_calls)
+This method acts very similarly as SetBegin and will not be described here. Its full implementation can be found in src/polygon.cpp file.
