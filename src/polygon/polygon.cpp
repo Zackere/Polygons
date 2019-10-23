@@ -117,6 +117,51 @@ auto CircleIntersection(DrawingBoard::Point2d const& center1,
                                         center1.y + x * e.y - y * e.x}};
   return result;
 }
+
+template <typename Callback>
+void BresenhamSymmetric(int x0, int y0, int x1, int y1, Callback callback) {
+  const auto dx = std::abs(x1 - x0);
+  const auto dy = -std::abs(y1 - y0);
+  const auto sx = x0 < x1 ? 1 : -1;
+  const auto sy = y0 < y1 ? 1 : -1;
+  auto err = dx + dy;
+  auto iters = (err > 0 ? dx / 2 : -dy / 2) + 1;
+  while (--iters > 0) {
+    auto e2 = 2 * err;
+    if (e2 >= dy) {
+      err += dy;
+      x0 += sx;
+      x1 -= sx;
+    }
+    if (e2 <= dx) {
+      err += dx;
+      y0 += sy;
+      y1 -= sy;
+    }
+    callback(x0, y0);
+    callback(x1, y1);
+  }
+}
+template <typename Callback>
+void BresenhamClassic(int x0, int y0, int x1, int y1, Callback callback) {
+  const auto dx = std::abs(x1 - x0);
+  const auto dy = -std::abs(y1 - y0);
+  const auto sx = x0 < x1 ? 1 : -1;
+  const auto sy = y0 < y1 ? 1 : -1;
+  auto err = dx + dy;
+  while (x0 != x1 || y0 != y1) {
+    auto e2 = 2 * err;
+    if (e2 >= dy) {
+      err += dy;
+      x0 += sx;
+    }
+    if (e2 <= dx) {
+      err += dx;
+      y0 += sy;
+    }
+    callback(x0, y0);
+  }
+}
 }  // namespace
 std::unique_ptr<Polygon> Polygon::CreateSamplePolygon(
     DrawingBoard* drawing_board) {
@@ -390,62 +435,9 @@ Polygon::PolygonEdge::PolygonEdge(PolygonEdge const& other)
       correct_(other.correct_) {}
 
 void Polygon::PolygonEdge::Display() {
-  int x, y, i, xe, ye;
-  const int dx = static_cast<int>(end_.x) - static_cast<int>(begin_.x);
-  const int dy = static_cast<int>(end_.y) - static_cast<int>(begin_.y);
-  const int dx1 = std::abs(dx);
-  const int dy1 = std::abs(dy);
-  int px = 2 * dy1 - dx1;
-  int py = 2 * dx1 - dy1;
-  if (dy1 <= dx1) {
-    if (dx >= 0) {
-      x = begin_.x;
-      y = begin_.y;
-      xe = end_.x;
-    } else {
-      x = end_.x;
-      y = end_.y;
-      xe = begin_.x;
-    }
+  BresenhamSymmetric(begin_.x, begin_.y, end_.x, end_.y, [this](int x, int y) {
     drawing_board_->SetPixel(x, y, edge_color_);
-    for (i = 0; x < xe; ++i) {
-      ++x;
-      if (px < 0) {
-        px += 2 * dy1;
-      } else {
-        if (dx * dy > 0)
-          ++y;
-        else
-          --y;
-        px += 2 * (dy1 - dx1);
-      }
-      drawing_board_->SetPixel(x, y, edge_color_);
-    }
-  } else {
-    if (dy >= 0) {
-      x = begin_.x;
-      y = begin_.y;
-      ye = end_.y;
-    } else {
-      x = end_.x;
-      y = end_.y;
-      ye = begin_.y;
-    }
-    drawing_board_->SetPixel(x, y, edge_color_);
-    for (i = 0; y < ye; ++i) {
-      ++y;
-      if (py <= 0) {
-        py += 2 * dx1;
-      } else {
-        if (dx * dy > 0)
-          ++x;
-        else
-          --x;
-        py += 2 * (dx1 - dy1);
-      }
-      drawing_board_->SetPixel(x, y, edge_color_);
-    }
-  }
+  });
   drawing_board_->SetPixel(begin_.x, begin_.y, vertex_color_);
   drawing_board_->SetPixel(end_.x, end_.y, vertex_color_);
   switch (constraint_) {
